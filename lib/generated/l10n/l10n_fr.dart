@@ -2111,6 +2111,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Laissez le mot de passe vide pour conserver le mot de passe actuel.';
 
   @override
+  String get usersTab => 'Utilisateurs';
+
+  String get groupsTab => 'Groupes';
+
+  String get groupGid => 'GID';
+
+  String get groupMembers => 'Membres';
+
+  String get groupMembersHint => 'Séparés par des espaces ou des virgules. Vider le champ retire tous les membres supplémentaires.';
+
+  String get groupSystem => 'Groupe système';
+
+  String get groupInUse => 'Ce groupe est le groupe principal de quelqu’un, il ne peut pas être supprimé.';
+
+  String get groupRootNotDeletable => 'Le groupe root ne peut pas être supprimé.';
   String funcUnavailableFmt(String func) {
     return '$func n\'est pas disponible via la connexion de ce serveur.';
   }

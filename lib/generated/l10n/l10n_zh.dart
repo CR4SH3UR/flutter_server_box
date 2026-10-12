@@ -1924,6 +1924,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get userPasswordEditTip => '密码留空将保留现有密码。';
 
   @override
+  String get usersTab => 'Users';
+
+  String get groupsTab => 'Groups';
+
+  String get groupGid => 'GID';
+
+  String get groupMembers => 'Members';
+
+  String get groupMembersHint => 'Separated by spaces or commas. Clearing it removes every supplementary member.';
+
+  String get groupSystem => 'System group';
+
+  String get groupInUse => 'That group is someone\'s primary group, so it cannot be deleted.';
+
+  String get groupRootNotDeletable => 'The root group cannot be deleted.';
   String funcUnavailableFmt(String func) {
     return '此服务器的连接方式不提供$func。';
   }
@@ -7440,6 +7455,21 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get userPasswordEditTip => '密碼留空將保留現有密碼。';
 
   @override
+  String get usersTab => 'Users';
+
+  String get groupsTab => 'Groups';
+
+  String get groupGid => 'GID';
+
+  String get groupMembers => 'Members';
+
+  String get groupMembersHint => 'Separated by spaces or commas. Clearing it removes every supplementary member.';
+
+  String get groupSystem => 'System group';
+
+  String get groupInUse => 'That group is someone\'s primary group, so it cannot be deleted.';
+
+  String get groupRootNotDeletable => 'The root group cannot be deleted.';
   String funcUnavailableFmt(String func) {
     return '此伺服器的連線方式不提供$func。';
   }

@@ -1485,6 +1485,22 @@ export interface UserDetail {
 export type UserPart = 'list' | 'detail'
 
 /// One part of the machine's accounts.
+/// One group, as `/etc/group` describes it.
+export interface SystemGroup {
+  name: string
+  gid: number
+  /// Accounts listed in `/etc/group` (supplementary members), sorted.
+  members: string[]
+}
+
+/// One group as the page draws it, with the flags the agent derived.
+export interface GroupRow extends SystemGroup {
+  system: boolean
+  /// Whether the agent would remove it: false for root and for a group that is
+  /// anyone's primary group.
+  deletable: boolean
+}
+
 export interface UserView {
   part: UserPart
   /// Whether the accounts could be read. `false` is a state of the machine —
@@ -1501,10 +1517,19 @@ export interface UserView {
   /// The uid below which this machine counts an account as a system one.
   uid_min: number | null
   users: UserRow[]
+  /// The groups from the same listing.
+  groups: GroupRow[]
   /// The account a detail is about, echoed because a response is read beside a
   /// request that may be older.
   name: string | null
   detail: UserDetail | null
+}
+
+/// What a caller wants a group to be.
+export interface GroupDraft {
+  name: string
+  members: string[]
+  system: boolean
 }
 
 /// What a caller wants an account to be — the same fields for a new account and
@@ -1537,13 +1562,18 @@ export type UserAction = 'create' | 'edit' | 'delete'
 /// Two passwords may travel here and neither reaches a command line: the
 /// account's own inside `draft`, and the `sudo` one as its own field — omitted
 /// until the first attempt comes back `sudo_rejected`.
+export type ActKind = 'user' | 'group'
+
 export interface UserActRequest {
+  /// Omitted means `user`, so older callers keep working.
+  kind?: ActKind
   action: UserAction
   draft?: UserDraft
-  /// Which account a change or a removal is about. The account as it is comes
+  group_draft?: GroupDraft
+  /// Which account or group a change or a removal is about. As it is comes
   /// from a catalog the agent reads at the moment of the write.
   name?: string
-  /// Whether a removal takes the home directory with it.
+  /// Whether a removal takes the home directory with it. Ignored for a group.
   remove_home?: boolean
   /// The `sudo` password, when the caller has one.
   password?: string
@@ -1569,13 +1599,18 @@ export type UserRefusalCode =
   | 'passwordLineBreak'
   | 'renaming'
   | 'rootNotDeletable'
+  | 'groupInUse'
+  | 'rootGroupNotDeletable'
+  | 'invalidGroupMember'
   | 'missingDraft'
   | 'missingName'
   | 'unsupportedPlatform'
   | 'unreadable'
   | 'userExists'
+  | 'groupExists'
   | 'agentAccount'
   | 'noSuchUser'
+  | 'noSuchGroup'
 
 /// A snippet saved on the agent (`/snippets`, migration 013). The library is
 /// the agent's rather than this browser's: `localStorage` is lost with the

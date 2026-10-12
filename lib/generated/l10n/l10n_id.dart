@@ -2085,6 +2085,21 @@ class AppLocalizationsId extends AppLocalizations {
       'Kosongkan kata sandi untuk mempertahankan kata sandi yang ada.';
 
   @override
+  String get usersTab => 'Users';
+
+  String get groupsTab => 'Groups';
+
+  String get groupGid => 'GID';
+
+  String get groupMembers => 'Members';
+
+  String get groupMembersHint => 'Separated by spaces or commas. Clearing it removes every supplementary member.';
+
+  String get groupSystem => 'System group';
+
+  String get groupInUse => 'That group is someone\'s primary group, so it cannot be deleted.';
+
+  String get groupRootNotDeletable => 'The root group cannot be deleted.';
   String funcUnavailableFmt(String func) {
     return '$func tidak tersedia melalui koneksi server ini.';
   }

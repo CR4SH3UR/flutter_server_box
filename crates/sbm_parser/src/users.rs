@@ -1,5 +1,6 @@
 //! The machine's accounts — the passwd and group catalogs, one account's own
-//! detail, and the commands that create, change and remove one.
+//! detail, and the commands that create, change and remove an account or a
+//! group.
 //!
 //! Ported from the app's Dart implementation, whose cases `tests/user_compat.rs`
 //! holds. The app now reaches this through FFI (`sbm_ffi::api::users`) and the
@@ -152,6 +153,32 @@ impl SystemUser {
     }
 }
 
+/// One group, as `/etc/group` describes it.
+///
+/// [`Self::members`] is the fourth field only — accounts that carry this group
+/// as a supplementary one. An account whose primary gid is this group's is in
+/// the group without being listed there; the catalog still surfaces it through
+/// that account's [`SystemUser::primary_group`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemGroup {
+    pub name: String,
+    pub gid: u32,
+    /// Sorted. An empty list means `/etc/group` names no member.
+    pub members: Vec<String>,
+}
+
+impl SystemGroup {
+    /// Whether this is a system group by the machine's account threshold.
+    ///
+    /// Uses [`UserCatalog::uid_min`]: distributions set `GID_MIN` to the same
+    /// value as `UID_MIN` almost everywhere, and a second threshold that this
+    /// catalog does not read would be a second source of truth for the same
+    /// question the user page already answers with one number.
+    pub fn is_system(&self, uid_min: u32) -> bool {
+        self.gid < uid_min
+    }
+}
+
 /// The machine's accounts and the two facts the catalog carries about itself.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserCatalog {
@@ -161,11 +188,17 @@ pub struct UserCatalog {
     pub uid_min: u32,
     /// Sorted by uid, then by name.
     pub users: Vec<SystemUser>,
+    /// Sorted by gid, then by name.
+    pub groups: Vec<SystemGroup>,
 }
 
 impl UserCatalog {
     pub fn find(&self, name: &str) -> Option<&SystemUser> {
         self.users.iter().find(|user| user.name == name)
+    }
+
+    pub fn find_group(&self, name: &str) -> Option<&SystemGroup> {
+        self.groups.iter().find(|group| group.name == name)
     }
 }
 
@@ -254,6 +287,23 @@ pub struct UserDraft {
     pub password: Option<String>,
 }
 
+/// What a caller wants a group to be.
+///
+/// The same fields for a new group and for a change to one; [`edit_group_command`]
+/// diffs against the group as the catalog has it. [`Self::members`] is the
+/// `/etc/group` member list only — primary-group membership is an account's
+/// own `gid`, changed through [`edit_command`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GroupDraft {
+    pub name: String,
+    #[serde(default)]
+    pub members: Vec<String>,
+    /// A system group, with a gid below the machine's threshold. Only the
+    /// create form offers it.
+    #[serde(default)]
+    pub system: bool,
+}
+
 /// Why a draft, a name or a command was refused.
 ///
 /// The case is what the caller is told, and the client phrases it: an agent
@@ -274,9 +324,18 @@ pub enum UserError {
     PasswordLineBreak,
     /// An account cannot be renamed: `usermod -l` leaves the home directory,
     /// the mail spool and every group membership naming the old login, and
-    /// there is no command that moves them all.
+    /// there is no command that moves them all. A group cannot be renamed for
+    /// the same reason: every account that names it as primary or
+    /// supplementary would still hold the old name until rebuilt one by one.
     Renaming,
     RootNotDeletable,
+    /// The group is someone's primary group, so `groupdel` would leave those
+    /// accounts with a gid no group carries.
+    GroupInUse,
+    /// gid 0 / the name `root`: the same refusal as for the root account.
+    RootGroupNotDeletable,
+    /// A member name `gpasswd` would not accept.
+    InvalidGroupMember,
     /// The catalog script did not print the account it ran as, so nothing about
     /// this output can be trusted to be about this machine.
     CurrentUserUnknown,
@@ -294,6 +353,9 @@ impl UserError {
             Self::PasswordLineBreak => "passwordLineBreak",
             Self::Renaming => "renaming",
             Self::RootNotDeletable => "rootNotDeletable",
+            Self::GroupInUse => "groupInUse",
+            Self::RootGroupNotDeletable => "rootGroupNotDeletable",
+            Self::InvalidGroupMember => "invalidGroupMember",
             Self::CurrentUserUnknown => "currentUserUnknown",
         }
     }
@@ -321,6 +383,7 @@ pub fn parse_list(output: &str) -> Result<UserCatalog, UserError> {
     let mut passwd: Vec<Vec<&str>> = Vec::new();
     let mut groups_by_gid: HashMap<u32, String> = HashMap::new();
     let mut supplementary: HashMap<String, Vec<String>> = HashMap::new();
+    let mut groups: Vec<SystemGroup> = Vec::new();
     let mut section = "";
 
     // Bound to a local: every row below borrows from it.
@@ -363,17 +426,26 @@ pub fn parse_list(output: &str) -> Result<UserCatalog, UserError> {
             let Ok(gid) = fields[2].parse::<u32>() else {
                 continue;
             };
+            let mut members: Vec<String> = fields[3]
+                .split(',')
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map(str::to_string)
+                .collect();
+            members.sort();
+            members.dedup();
             groups_by_gid.insert(gid, fields[0].to_string());
-            for member in fields[3].split(',') {
-                let name = member.trim();
-                if name.is_empty() {
-                    continue;
-                }
+            for name in &members {
                 supplementary
-                    .entry(name.to_string())
+                    .entry(name.clone())
                     .or_default()
                     .push(fields[0].to_string());
             }
+            groups.push(SystemGroup {
+                name: fields[0].to_string(),
+                gid,
+                members,
+            });
         }
     }
 
@@ -408,11 +480,13 @@ pub fn parse_list(output: &str) -> Result<UserCatalog, UserError> {
         })
         .collect();
     users.sort_by(|a, b| a.uid.cmp(&b.uid).then_with(|| a.name.cmp(&b.name)));
+    groups.sort_by(|a, b| a.gid.cmp(&b.gid).then_with(|| a.name.cmp(&b.name)));
 
     Ok(UserCatalog {
         current_user,
         uid_min,
         users,
+        groups,
     })
 }
 
@@ -785,6 +859,99 @@ pub fn delete_command(user: &SystemUser, remove_home: bool) -> Result<String, Us
     }
     args.push(single_quote(&user.name));
     Ok(args.join(" "))
+}
+
+/// What is wrong with a group draft, or `None`.
+pub fn validate_group_draft(draft: &GroupDraft) -> Option<UserError> {
+    if !valid_name(&draft.name) {
+        return Some(UserError::InvalidName);
+    }
+    if draft.members.iter().any(|member| !valid_name(member)) {
+        return Some(UserError::InvalidGroupMember);
+    }
+    None
+}
+
+/// The command that creates a group, then sets its member list when asked.
+///
+/// `gpasswd -M` is the one write that replaces the whole list; building the
+/// same state with `usermod -aG` per member would leave anyone already in the
+/// group, and clearing a list would need a different path for every account.
+pub fn create_group_command(draft: &GroupDraft) -> Result<String, UserError> {
+    if let Some(error) = validate_group_draft(draft) {
+        return Err(error);
+    }
+    let mut args: Vec<String> = vec!["groupadd".to_string()];
+    if draft.system {
+        args.push("-r".to_string());
+    }
+    args.push(single_quote(&draft.name));
+    let create = args.join(" ");
+    if draft.members.is_empty() {
+        return Ok(create);
+    }
+    Ok(format!(
+        "set -e\n{create}\n{}",
+        gpasswd_members(&draft.name, &draft.members)
+    ))
+}
+
+/// The command that changes a group's member list.
+///
+/// Renaming is refused: [`UserError::Renaming`]. A no-op when the members are
+/// already what the draft asks for.
+pub fn edit_group_command(
+    original: &SystemGroup,
+    draft: &GroupDraft,
+) -> Result<String, UserError> {
+    if let Some(error) = validate_group_draft(draft) {
+        return Err(error);
+    }
+    if draft.name != original.name {
+        return Err(UserError::Renaming);
+    }
+    if draft.members == original.members {
+        return Ok(":".to_string());
+    }
+    Ok(gpasswd_members(&original.name, &draft.members))
+}
+
+/// The command that removes a group.
+///
+/// Refused for gid 0 / the name `root`, and for a group that is anyone's
+/// primary group: `groupdel` would leave those accounts with a gid no group
+/// carries. Supplementary membership is dropped with the group itself.
+pub fn delete_group_command(
+    group: &SystemGroup,
+    catalog: &UserCatalog,
+) -> Result<String, UserError> {
+    if group.gid == 0 || group.name == "root" {
+        return Err(UserError::RootGroupNotDeletable);
+    }
+    if !valid_name(&group.name) {
+        return Err(UserError::InvalidName);
+    }
+    let in_use = catalog.users.iter().any(|user| {
+        user.gid == group.gid
+            || user
+                .primary_group
+                .as_deref()
+                .is_some_and(|name| name == group.name)
+    });
+    if in_use {
+        return Err(UserError::GroupInUse);
+    }
+    Ok(format!("groupdel {}", single_quote(&group.name)))
+}
+
+/// `gpasswd -M` with the list joined the way it expects: comma-separated, no
+/// spaces. An empty list clears every supplementary member.
+fn gpasswd_members(group: &str, members: &[String]) -> String {
+    format!(
+        "gpasswd -M {} {}",
+        single_quote(&members.join(",")),
+        single_quote(group)
+    )
 }
 
 /// A login shell as `user`, for a terminal opened from the account's page.

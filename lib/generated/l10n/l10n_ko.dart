@@ -1967,6 +1967,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get userPasswordEditTip => '기존 비밀번호를 유지하려면 비워 두세요.';
 
   @override
+  String get usersTab => 'Users';
+
+  String get groupsTab => 'Groups';
+
+  String get groupGid => 'GID';
+
+  String get groupMembers => 'Members';
+
+  String get groupMembersHint => 'Separated by spaces or commas. Clearing it removes every supplementary member.';
+
+  String get groupSystem => 'System group';
+
+  String get groupInUse => 'That group is someone\'s primary group, so it cannot be deleted.';
+
+  String get groupRootNotDeletable => 'The root group cannot be deleted.';
   String funcUnavailableFmt(String func) {
     return '$func은(는) 이 서버의 연결 방식에서 사용할 수 없습니다.';
   }

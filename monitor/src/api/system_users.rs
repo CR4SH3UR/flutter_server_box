@@ -45,8 +45,9 @@ use serde::{Deserialize, Serialize};
 
 use sbm_parser::SystemType;
 use sbm_parser::users::{
-    LIST_SCRIPT, SystemUser, UserCatalog, UserDetail, UserDraft, create_command, delete_command,
-    detail_script, edit_command, parse_detail, parse_list,
+    LIST_SCRIPT, GroupDraft, SystemGroup, SystemUser, UserCatalog, UserDetail, UserDraft,
+    create_command, create_group_command, delete_command, delete_group_command, detail_script,
+    edit_command, edit_group_command, parse_detail, parse_list,
 };
 
 use super::machine;
@@ -93,6 +94,8 @@ struct UserListResponse {
     /// distribution that sets another.
     uid_min: Option<u32>,
     users: Vec<UserRow>,
+    /// The groups from the same listing the accounts came from.
+    groups: Vec<GroupRow>,
     /// The account [`UserPart::Detail`] is about, echoed because a response is
     /// read beside a request that may be older.
     name: Option<String>,
@@ -145,6 +148,36 @@ impl UserRow {
     }
 }
 
+/// One group as the panel draws it.
+#[derive(Serialize)]
+struct GroupRow {
+    #[serde(flatten)]
+    group: SystemGroup,
+    /// Below [`UserListResponse::uid_min`].
+    system: bool,
+    /// Whether this endpoint would remove it: not the root group, and not
+    /// anyone's primary group.
+    deletable: bool,
+}
+
+impl GroupRow {
+    fn of(group: &SystemGroup, catalog: &UserCatalog) -> Self {
+        let is_root = group.gid == 0 || group.name == "root";
+        let in_use = catalog.users.iter().any(|user| {
+            user.gid == group.gid
+                || user
+                    .primary_group
+                    .as_deref()
+                    .is_some_and(|name| name == group.name)
+        });
+        Self {
+            system: group.is_system(catalog.uid_min),
+            deletable: !is_root && !in_use,
+            group: group.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct UserQuery {
     part: Option<UserPart>,
@@ -191,6 +224,11 @@ pub async fn list(
             .users
             .iter()
             .map(|user| UserRow::of(user, catalog.uid_min, &catalog.current_user))
+            .collect(),
+        groups: catalog
+            .groups
+            .iter()
+            .map(|group| GroupRow::of(group, &catalog))
             .collect(),
         name: None,
         detail: None,
@@ -299,16 +337,23 @@ pub async fn act(
 /// One write, as the client describes it.
 #[derive(Debug, Deserialize)]
 pub struct UserActRequest {
+    /// Whether this write is about an account or a group. Omitted means an
+    /// account, so older panels keep working.
+    #[serde(default)]
+    kind: ActKind,
     action: UserAction,
     /// The account as the caller wants it, for a create or a change.
     #[serde(default)]
     draft: Option<UserDraft>,
-    /// Which account a change or a removal is about. The account as it is comes
+    /// The group as the caller wants it, for a create or a change.
+    #[serde(default)]
+    group_draft: Option<GroupDraft>,
+    /// Which account or group a change or a removal is about. As it *is* comes
     /// from a listing this endpoint runs, never from here.
     #[serde(default)]
     name: Option<String>,
     /// Whether a removal takes the home directory with it. `userdel -r` is not
-    /// undoable, so it is asked rather than assumed.
+    /// undoable, so it is asked rather than assumed. Ignored for a group.
     #[serde(default)]
     remove_home: bool,
     /// The `sudo` password, when the caller has one: see `machine::as_root`.
@@ -318,20 +363,29 @@ pub struct UserActRequest {
 }
 
 impl UserActRequest {
-    /// What was asked of which account, for the audit row.
+    /// What was asked of which account or group, for the audit row.
     fn subject(&self) -> String {
-        let target = self
-            .draft
-            .as_ref()
-            .map(|draft| draft.name.clone())
-            .or_else(|| self.name.clone())
-            .unwrap_or_default();
-        format!("{} {target}", self.action.as_str())
+        let target = match self.kind {
+            ActKind::User => self
+                .draft
+                .as_ref()
+                .map(|draft| draft.name.clone())
+                .or_else(|| self.name.clone())
+                .unwrap_or_default(),
+            ActKind::Group => self
+                .group_draft
+                .as_ref()
+                .map(|draft| draft.name.clone())
+                .or_else(|| self.name.clone())
+                .unwrap_or_default(),
+        };
+        format!("{} {} {target}", self.kind.as_str(), self.action.as_str())
     }
 
     /// Whether the command will hold the account's new password.
     fn carries_secret(&self) -> bool {
-        self.action != UserAction::Delete
+        self.kind == ActKind::User
+            && self.action != UserAction::Delete
             && self
                 .draft
                 .as_ref()
@@ -342,6 +396,13 @@ impl UserActRequest {
     /// is touched: what the caller sent is theirs to get right, and a name the
     /// machine does not have is not one to run a command about.
     fn command(&self, catalog: &UserCatalog) -> Result<String, Refusal> {
+        match self.kind {
+            ActKind::User => self.user_command(catalog),
+            ActKind::Group => self.group_command(catalog),
+        }
+    }
+
+    fn user_command(&self, catalog: &UserCatalog) -> Result<String, Refusal> {
         match self.action {
             UserAction::Create => {
                 let draft = self.draft.as_ref().ok_or(Refusal::of("missingDraft"))?;
@@ -354,10 +415,11 @@ impl UserActRequest {
             }
             UserAction::Edit => {
                 let draft = self.draft.as_ref().ok_or(Refusal::of("missingDraft"))?;
-                edit_command(self.target(catalog)?, draft).map_err(|error| Refusal::of(error.as_str()))
+                edit_command(self.target_user(catalog)?, draft)
+                    .map_err(|error| Refusal::of(error.as_str()))
             }
             UserAction::Delete => {
-                let user = self.target(catalog)?;
+                let user = self.target_user(catalog)?;
                 if user.name == catalog.current_user {
                     return Err(Refusal::of("agentAccount"));
                 }
@@ -366,14 +428,70 @@ impl UserActRequest {
         }
     }
 
+    fn group_command(&self, catalog: &UserCatalog) -> Result<String, Refusal> {
+        match self.action {
+            UserAction::Create => {
+                let draft = self
+                    .group_draft
+                    .as_ref()
+                    .ok_or(Refusal::of("missingDraft"))?;
+                if catalog.find_group(&draft.name).is_some() {
+                    return Err(Refusal::of("groupExists"));
+                }
+                create_group_command(draft).map_err(|error| Refusal::of(error.as_str()))
+            }
+            UserAction::Edit => {
+                let draft = self
+                    .group_draft
+                    .as_ref()
+                    .ok_or(Refusal::of("missingDraft"))?;
+                edit_group_command(self.target_group(catalog)?, draft)
+                    .map_err(|error| Refusal::of(error.as_str()))
+            }
+            UserAction::Delete => {
+                let group = self.target_group(catalog)?;
+                delete_group_command(group, catalog).map_err(|error| Refusal::of(error.as_str()))
+            }
+        }
+    }
+
     /// The account this write names, as the catalog has it.
-    fn target<'a>(&self, catalog: &'a UserCatalog) -> Result<&'a SystemUser, Refusal> {
+    fn target_user<'a>(&self, catalog: &'a UserCatalog) -> Result<&'a SystemUser, Refusal> {
         let name = self
             .name
             .as_deref()
             .filter(|name| !name.is_empty())
             .ok_or(Refusal::of("missingName"))?;
         catalog.find(name).ok_or(Refusal::absent())
+    }
+
+    /// The group this write names, as the catalog has it.
+    fn target_group<'a>(&self, catalog: &'a UserCatalog) -> Result<&'a SystemGroup, Refusal> {
+        let name = self
+            .name
+            .as_deref()
+            .filter(|name| !name.is_empty())
+            .ok_or(Refusal::of("missingName"))?;
+        catalog
+            .find_group(name)
+            .ok_or(Refusal::absent_group())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum ActKind {
+    #[default]
+    User,
+    Group,
+}
+
+impl ActKind {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::User => "user",
+            Self::Group => "group",
+        }
     }
 }
 
@@ -478,6 +596,13 @@ impl Refusal {
         }
     }
 
+    fn absent_group() -> Self {
+        Self {
+            code: "noSuchGroup",
+            absent: true,
+        }
+    }
+
     fn http(&self) -> HttpResponse {
         let mut builder = if self.absent {
             HttpResponse::NotFound()
@@ -501,6 +626,7 @@ fn empty_response(part: UserPart, reason_kind: UserReason, reason: Option<String
         agent_account: None,
         uid_min: None,
         users: Vec::new(),
+        groups: Vec::new(),
         name: None,
         detail: None,
     }
@@ -530,8 +656,10 @@ docker:x:998:admin,deploy\n";
 
     fn request(action: UserAction) -> UserActRequest {
         UserActRequest {
+            kind: ActKind::User,
             action,
             draft: None,
+            group_draft: None,
             name: None,
             remove_home: false,
             password: None,
@@ -662,6 +790,6 @@ docker:x:998:admin,deploy\n";
             ..draft("svc")
         });
         create.password = Some("sudo-secret".into());
-        assert_eq!(create.subject(), "create svc");
+        assert_eq!(create.subject(), "user create svc");
     }
 }

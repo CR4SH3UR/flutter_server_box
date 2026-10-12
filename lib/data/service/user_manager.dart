@@ -103,6 +103,34 @@ abstract final class UserManager {
         ),
       );
 
+  /// Why [draft] cannot be sent, or null when it can.
+  static String? validateGroupDraft(ServerGroupDraft draft) {
+    final code = ffi.usersValidateGroupDraft(draftJson: _json(draft.toJson()));
+    return code == null ? null : _message(code);
+  }
+
+  static String createGroupScript(ServerGroupDraft draft) => _command(
+    () => ffi.usersCreateGroupCommand(draftJson: _json(draft.toJson())),
+  );
+
+  static String editGroupScript(ServerGroup original, ServerGroupDraft draft) =>
+      _command(
+        () => ffi.usersEditGroupCommand(
+          originalJson: _json(original.toJson()),
+          draftJson: _json(draft.toJson()),
+        ),
+      );
+
+  static String deleteGroupScript(
+    ServerGroup group,
+    ServerUserCatalog catalog,
+  ) => _command(
+    () => ffi.usersDeleteGroupCommand(
+      groupJson: _json(group.toJson()),
+      catalogJson: _json(catalog.toJson()),
+    ),
+  );
+
   /// A refused draft or account is a caller's mistake — the form validates
   /// with [validateDraft] first — so it surfaces as an [ArgumentError], as it
   /// did before the rules moved to Rust.
@@ -125,6 +153,9 @@ abstract final class UserManager {
     'passwordLineBreak' => 'Password cannot contain line breaks',
     'renaming' => 'Renaming is not supported',
     'rootNotDeletable' => 'The root user cannot be deleted',
+    'groupInUse' => 'That group is a primary group and cannot be deleted',
+    'rootGroupNotDeletable' => 'The root group cannot be deleted',
+    'invalidGroupMember' => 'Invalid group member',
     'currentUserUnknown' => 'Unable to determine the current user',
     _ => code,
   };
