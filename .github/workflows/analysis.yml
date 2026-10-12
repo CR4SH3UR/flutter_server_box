@@ -101,19 +101,31 @@ jobs:
           # and `packages/` are the submodules the app is built from, so a
           # gitlink move there is a source change to all of it.
           #
-          # `.github/actions/` and `build.yml` are here for a reason of the same
-          # kind and were missed: `setup-flutter` is the composite action every
-          # job below starts with, so a broken SDK pin in it would have been
-          # merged after only the always-on reproducibility job, and `build.yml`
-          # does not run on a pull request at all — so its own changes were
-          # reaching main with nothing having compiled anything.
-          shared='^\.github/(workflows/(analysis|build)\.yml$|actions/)|^pubspec\.(yaml|lock)$|^packages/'
+          # `.github/actions/`, `build.yml`, and the other compile-or-release
+          # workflows are here for a reason of the same kind and were missed:
+          # `setup-flutter` is the composite action every job below starts with,
+          # so a broken SDK pin in it would have been merged after only the
+          # always-on reproducibility job, and `build.yml` /
+          # `android-reproducible.yml` / `monitor-release.yml` do not run on a
+          # pull request at all — so their own changes were reaching main with
+          # nothing having compiled anything. CLA workflows are left out: they
+          # never check out or build the app.
+          shared='^\.github/(workflows/(analysis|build|android-reproducible|monitor-release)\.yml$|actions/)|^pubspec\.(yaml|lock)$|^packages/'
 
           # Not the panel and its SDK under `monitor/`: the agent reads only the
           # panel's build output, at run time, and the tests build none of it.
-          emit rust "$shared|^crates/|^monitor/|^Cargo\.(toml|lock)$" '^monitor/(frontend|sdk)/'
+          #
+          # `hook/` is the Dart build hook that compiles `sbm_ffi` for the app;
+          # a change there used to skip every filtered job.
+          #
+          # `third_party/ironrdp/` is a `[patch.crates-io]` path dependency: cargo
+          # resolves it before building any crate, including the monitor.
+          emit rust "$shared|^crates/|^monitor/|^Cargo\.(toml|lock)$|^hook/|^third_party/ironrdp/" '^monitor/(frontend|sdk)/'
           # `crates/` because `flutter test` loads the FFI dylib and the
           # generated bindings come from there.
+          #
+          # `hook/` for the same reason as rust: unit tests load the dylib the
+          # hook (and the `cargo build -p sbm_ffi` step) produce.
           #
           # `macos/` because `test/platform/macos_entitlements_test.dart` is a plain
           # test and runs here — the `macOS build` job below says exactly that
@@ -125,7 +137,7 @@ jobs:
           #
           # `store/` because `test/unit/theme_store_tree_test.dart` reads the
           # official theme repository the way the store does.
-          emit dart "$shared|^lib/|^test/|^integration_test/|^crates/|^macos/|^Cargo\.(toml|lock)$|^analysis_options\.yaml$|^docs/schemas/|^store/"
+          emit dart "$shared|^lib/|^test/|^integration_test/|^crates/|^macos/|^Cargo\.(toml|lock)$|^analysis_options\.yaml$|^docs/schemas/|^store/|^hook/"
           emit frontend "$shared|^monitor/frontend/|^packages/webui/"
           # `store/` (and fl_lib, under `$shared`) for the theme manifests the
           # docs job validates against that same schema; `assets/catalog/` for
@@ -134,7 +146,11 @@ jobs:
           # `store/` because the website build packs it into the store's
           # tarball (scripts/store-tarball.sh).
           emit website "$shared|^website/|^packages/webui/|^store/|^scripts/store-tarball\.sh$"
-          emit android "$shared|^android/"
+          # `scripts/release/` because the F-Droid / reproducible Android jobs
+          # are the only things that run those scripts, and a scripts-only PR
+          # used to skip the Android unit-test job that at least compiles the
+          # Gradle project those scripts assume.
+          emit android "$shared|^android/|^scripts/release/"
 
   reproducibilityCheck:
     # These are deterministic-input guards, not a reproducibility proof. The
