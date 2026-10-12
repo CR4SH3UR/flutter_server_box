@@ -6,6 +6,20 @@ description: What changed in each released version
 Every released version, newest first. Downloads and per-release notes are on
 [GitHub Releases](https://github.com/lollipopkit/flutter_server_box/releases).
 
+## v1.0.1766 — 2026-10-12
+
+### Added
+
+- **System groups** beside users in the Users server function and the Monitor
+  System Users page: create, edit membership and remove groups through the
+  same command layer as accounts (`groupadd` / `gpasswd` / `groupdel`).
+- **Workspace tab** with split panes, synced input and keyboard shortcuts.
+- One `Feature` enum decides every beta mark in the UI.
+
+### Fixed
+
+- Android: unpack the Linux rootfs in Dart; the guest `TMPDIR` is `/tmp`.
+
 ## v1.0.1765 — 2026-10-12
 
 ### Added
