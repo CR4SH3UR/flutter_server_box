@@ -790,6 +790,6 @@ docker:x:998:admin,deploy\n";
             ..draft("svc")
         });
         create.password = Some("sudo-secret".into());
-        assert_eq!(create.subject(), "create svc");
+        assert_eq!(create.subject(), "user create svc");
     }
 }
