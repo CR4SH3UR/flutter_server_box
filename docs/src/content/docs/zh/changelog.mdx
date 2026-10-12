@@ -6,6 +6,20 @@ description: 各发布版本的变更内容
 按版本倒序排列。安装包与每个版本的完整说明见
 [GitHub Releases](https://github.com/lollipopkit/flutter_server_box/releases)。
 
+## v1.0.1766 — 2026-10-12
+
+### 新增
+
+- **系统用户组**：在 Users 服务器功能和 Monitor 的系统用户页面中，可与用户
+  一并管理用户组（创建、编辑成员、删除），命令层与账户相同
+  （`groupadd` / `gpasswd` / `groupdel`）。
+- **工作区标签页**：支持分屏、同步输入和键盘快捷键。
+- 统一用一个 `Feature` 枚举决定界面上的 beta 标记。
+
+### 修复
+
+- Android：在 Dart 中解包 Linux rootfs；guest 的 `TMPDIR` 为 `/tmp`。
+
 ## v1.0.1765 — 2026-10-12
 
 ### 新增
