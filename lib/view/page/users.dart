@@ -779,85 +779,112 @@ extension on _UsersPageState {
     required bool wide,
     required bool last,
   }) {
-    final primaryOf = catalog.users
-        .where(
-          (user) =>
-              user.gid == group.gid ||
-              user.primaryGroup == group.name,
-        )
-        .map((user) => user.name)
-        .toList(growable: false);
+    final primaryOf = catalog.users.any(
+      (user) =>
+          user.gid == group.gid || user.primaryGroup == group.name,
+    );
     final deletable =
-        group.name != 'root' &&
-        group.gid != 0 &&
-        primaryOf.isEmpty;
-    return InkWell(
-      onTap: _busy ? null : () => _editGroup(group),
-      onLongPress: !deletable || _busy
+        group.name != 'root' && group.gid != 0 && !primaryOf;
+    final row = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      decoration: last
           ? null
-          : () => _deleteGroup(group),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-        decoration: last
-            ? null
-            : BoxDecoration(
-                border: Border(bottom: BorderSide(color: _hairline)),
-              ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 44,
-              child: Text(
-                '${group.gid}',
-                textAlign: TextAlign.end,
-                style: UIs.text13Grey,
-              ),
+          : BoxDecoration(
+              border: Border(bottom: BorderSide(color: _hairline)),
             ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          group.name,
-                          style: UIs.text15,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (group.isSystem(catalog.uidMin)) ...[
-                        const SizedBox(width: 7),
-                        Text(l10n.groupSystem, style: UIs.text11Grey),
-                      ],
-                    ],
-                  ),
-                  if (!wide)
-                    Text(
-                      group.members.isEmpty
-                          ? '—'
-                          : group.members.join(', '),
-                      style: UIs.text11Grey,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: wide ? 44 : 38,
+            child: Text(
+              '${group.gid}',
+              textAlign: TextAlign.end,
+              style: _monoStyle(12),
             ),
-            if (wide) ...[
-              const SizedBox(width: 13),
-              SizedBox(
-                width: 150,
-                child: Text(
-                  group.members.isEmpty ? '—' : group.members.join(', '),
-                  style: UIs.text13Grey,
-                  overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(width: wide ? 13 : 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(group.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    if (group.isSystem(catalog.uidMin))
+                      Text(l10n.groupSystem, style: UIs.text11Grey),
+                  ],
                 ),
+                if (!wide) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    group.members.isEmpty
+                        ? '—'
+                        : group.members.join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _monoStyle(11),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (wide) ...[
+            const SizedBox(width: 13),
+            SizedBox(
+              width: 150,
+              child: Text(
+                group.members.isEmpty ? '—' : group.members.join(', '),
+                style: _monoStyle(12),
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-            const SizedBox(width: 24),
-          ],
-        ),
+            ),
+            _buildGroupMenu(group, deletable: deletable),
+          ] else
+            SizedBox(
+              width: 24,
+              child: Icon(
+                Icons.chevron_right,
+                size: 17,
+                color: UIs.textGrey.color,
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (wide) return row;
+    return InkWell(
+      key: ValueKey('group-row-${group.gid}'),
+      onTap: _busy ? null : () => _editGroup(group),
+      child: row,
+    );
+  }
+
+  Widget _buildGroupMenu(ServerGroup group, {required bool deletable}) {
+    if (!UserManager.validName(group.name) || _busy) {
+      return const SizedBox(width: 24);
+    }
+    return SizedBox(
+      width: 24,
+      child: ContextMenuButton(
+        tooltip: libL10n.more,
+        actions: () => [
+          ContextMenuAction(
+            text: libL10n.edit,
+            icon: Icons.edit_outlined,
+            onTap: () => _editGroup(group),
+          ),
+          if (deletable)
+            ContextMenuAction(
+              text: libL10n.delete,
+              icon: Icons.delete_outline,
+              destructive: true,
+              onTap: () => _deleteGroup(group),
+            ),
+        ],
       ),
     );
   }
@@ -973,9 +1000,15 @@ extension on _UsersPageState {
     if (draft == null || !mounted) return false;
     final catalog = _catalog;
     if (catalog == null) return false;
-    final script = group == null
-        ? UserManager.createGroupScript(draft)
-        : UserManager.editGroupScript(group, draft);
+    late final String script;
+    try {
+      script = group == null
+          ? UserManager.createGroupScript(draft)
+          : UserManager.editGroupScript(group, draft);
+    } on ArgumentError catch (e) {
+      if (mounted) Toast.error('$e');
+      return false;
+    }
     if (!await _runMutation(script)) return false;
     await _refresh();
     return true;
@@ -990,7 +1023,13 @@ extension on _UsersPageState {
       actions: Btnx.cancelRedOk,
     );
     if (confirmed != true || !mounted) return false;
-    final script = UserManager.deleteGroupScript(group, catalog);
+    late final String script;
+    try {
+      script = UserManager.deleteGroupScript(group, catalog);
+    } on ArgumentError catch (e) {
+      if (mounted) Toast.error('$e');
+      return false;
+    }
     if (!await _runMutation(script)) return false;
     await _refresh();
     return true;
