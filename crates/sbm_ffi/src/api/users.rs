@@ -7,12 +7,13 @@
 //! drafts cross as `sbm_parser::users`' serde JSON, parsed results the same
 //! way, and a refusal as [`UserFfiError`], whose `code` the app phrases.
 
-use sbm_parser::users::{self, SystemUser, UserDraft, UserError};
+use sbm_parser::users::{self, GroupDraft, SystemGroup, SystemUser, UserDraft, UserError};
 
-/// A refused account or draft. `code` is `sbm_parser::users::UserError`'s
+/// A refused account, group or draft. `code` is `sbm_parser::users::UserError`'s
 /// (`invalidName`, `lineBreak`, `invalidPrimaryGroup`,
 /// `invalidSupplementaryGroup`, `passwordLineBreak`, `renaming`,
-/// `rootNotDeletable`, `currentUserUnknown`), or `malformed` for JSON the
+/// `rootNotDeletable`, `groupInUse`, `rootGroupNotDeletable`,
+/// `invalidGroupMember`, `currentUserUnknown`), or `malformed` for JSON the
 /// app should never have sent.
 #[derive(Debug, Clone)]
 pub struct UserFfiError {
@@ -38,6 +39,14 @@ fn account(json: &str) -> Result<SystemUser, UserFfiError> {
 }
 
 fn draft(json: &str) -> Result<UserDraft, UserFfiError> {
+    serde_json::from_str(json).map_err(malformed)
+}
+
+fn group(json: &str) -> Result<SystemGroup, UserFfiError> {
+    serde_json::from_str(json).map_err(malformed)
+}
+
+fn group_draft(json: &str) -> Result<GroupDraft, UserFfiError> {
     serde_json::from_str(json).map_err(malformed)
 }
 
@@ -97,4 +106,41 @@ pub fn users_delete_command(user_json: String, remove_home: bool) -> Result<Stri
 #[flutter_rust_bridge::frb(sync)]
 pub fn users_login_shell_command(user: String) -> String {
     users::login_shell_command(&user)
+}
+
+/// Why a group draft cannot be sent, as an error code, or `None` when it can
+#[flutter_rust_bridge::frb(sync)]
+pub fn users_validate_group_draft(draft_json: String) -> Result<Option<String>, UserFfiError> {
+    Ok(users::validate_group_draft(&group_draft(&draft_json)?)
+        .map(|error| error.as_str().to_string()))
+}
+
+/// `groupadd`, and `gpasswd -M` when the draft carries members; needs root
+#[flutter_rust_bridge::frb(sync)]
+pub fn users_create_group_command(draft_json: String) -> Result<String, UserFfiError> {
+    Ok(users::create_group_command(&group_draft(&draft_json)?)?)
+}
+
+/// `gpasswd -M` for the members that changed; needs root
+#[flutter_rust_bridge::frb(sync)]
+pub fn users_edit_group_command(
+    original_json: String,
+    draft_json: String,
+) -> Result<String, UserFfiError> {
+    Ok(users::edit_group_command(
+        &group(&original_json)?,
+        &group_draft(&draft_json)?,
+    )?)
+}
+
+/// `groupdel`; needs root. `catalog_json` is the listing that decides whether
+/// the group is anyone's primary group.
+#[flutter_rust_bridge::frb(sync)]
+pub fn users_delete_group_command(
+    group_json: String,
+    catalog_json: String,
+) -> Result<String, UserFfiError> {
+    let catalog: users::UserCatalog =
+        serde_json::from_str(&catalog_json).map_err(malformed)?;
+    Ok(users::delete_group_command(&group(&group_json)?, &catalog)?)
 }

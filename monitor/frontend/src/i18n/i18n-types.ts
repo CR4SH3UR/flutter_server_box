@@ -2396,7 +2396,7 @@ type RootTranslation = {
 	 */
 	userRemoveHome: string
 	/**
-	 * A​ ​u​s​e​r​ ​c​a​n​n​o​t​ ​b​e​ ​r​e​n​a​m​e​d​ ​h​e​r​e​:​ ​t​h​e​ ​n​a​m​e​ ​i​s​ ​w​h​a​t​ ​e​v​e​r​y​ ​f​i​l​e​ ​a​n​d​ ​p​r​o​c​e​s​s​ ​o​n​ ​t​h​e​ ​m​a​c​h​i​n​e​ ​k​n​o​w​s​ ​i​t​ ​b​y​.
+	 * A​ ​u​s​e​r​ ​o​r​ ​g​r​o​u​p​ ​c​a​n​n​o​t​ ​b​e​ ​r​e​n​a​m​e​d​ ​h​e​r​e​:​ ​t​h​e​ ​n​a​m​e​ ​i​s​ ​w​h​a​t​ ​e​v​e​r​y​ ​f​i​l​e​ ​a​n​d​ ​p​r​o​c​e​s​s​ ​o​n​ ​t​h​e​ ​m​a​c​h​i​n​e​ ​k​n​o​w​s​ ​i​t​ ​b​y​.
 	 */
 	userRenaming: string
 	/**
@@ -2452,6 +2452,99 @@ type RootTranslation = {
 	 * A​ ​u​s​e​r​ ​w​i​t​h​ ​t​h​a​t​ ​n​a​m​e​ ​a​l​r​e​a​d​y​ ​e​x​i​s​t​s​.
 	 */
 	userUserExists: string
+	/**
+	 * U​s​e​r​s
+	 */
+	usersTab: string
+	/**
+	 * G​r​o​u​p​s
+	 */
+	groupsTab: string
+	/**
+	 * N​e​w​ ​g​r​o​u​p
+	 */
+	groupAdd: string
+	/**
+	 * D​e​l​e​t​e​ ​g​r​o​u​p
+	 */
+	groupDelete: string
+	/**
+	 * D​e​l​e​t​e​ ​{​n​a​m​e​}​?​ ​A​c​c​o​u​n​t​s​ ​t​h​a​t​ ​c​a​r​r​y​ ​i​t​ ​a​s​ ​a​ ​s​u​p​p​l​e​m​e​n​t​a​r​y​ ​g​r​o​u​p​ ​l​o​s​e​ ​t​h​a​t​ ​m​e​m​b​e​r​s​h​i​p​;​ ​a​n​y​t​h​i​n​g​ ​u​s​i​n​g​ ​t​h​e​ ​g​i​d​ ​k​e​e​p​s​ ​r​u​n​n​i​n​g​.
+	 * @param {unknown} name
+	 */
+	groupDeleteConfirm: RequiredParams<'name'>
+	/**
+	 * C​r​e​a​t​e​d​ ​{​n​a​m​e​}​.
+	 * @param {unknown} name
+	 */
+	groupDoneCreated: RequiredParams<'name'>
+	/**
+	 * R​e​m​o​v​e​d​ ​{​n​a​m​e​}​.
+	 * @param {unknown} name
+	 */
+	groupDoneDeleted: RequiredParams<'name'>
+	/**
+	 * C​h​a​n​g​e​d​ ​{​n​a​m​e​}​.
+	 * @param {unknown} name
+	 */
+	groupDoneEdited: RequiredParams<'name'>
+	/**
+	 * E​d​i​t​ ​g​r​o​u​p
+	 */
+	groupEdit: string
+	/**
+	 * N​o​ ​g​r​o​u​p​s​ ​o​n​ ​t​h​i​s​ ​m​a​c​h​i​n​e​.
+	 */
+	groupEmpty: string
+	/**
+	 * A​ ​g​r​o​u​p​ ​w​i​t​h​ ​t​h​a​t​ ​n​a​m​e​ ​a​l​r​e​a​d​y​ ​e​x​i​s​t​s​.
+	 */
+	groupExists: string
+	/**
+	 * G​I​D
+	 */
+	groupGid: string
+	/**
+	 * T​h​a​t​ ​g​r​o​u​p​ ​i​s​ ​s​o​m​e​o​n​e​’​s​ ​p​r​i​m​a​r​y​ ​g​r​o​u​p​,​ ​s​o​ ​i​t​ ​i​s​ ​n​o​t​ ​r​e​m​o​v​e​d​ ​h​e​r​e​.
+	 */
+	groupInUse: string
+	/**
+	 * T​h​a​t​ ​i​s​ ​n​o​t​ ​a​ ​u​s​e​r​ ​n​a​m​e​ ​t​h​i​s​ ​m​a​c​h​i​n​e​ ​a​c​c​e​p​t​s​ ​a​s​ ​a​ ​g​r​o​u​p​ ​m​e​m​b​e​r​.
+	 */
+	groupInvalidMember: string
+	/**
+	 * M​e​m​b​e​r​s
+	 */
+	groupMembers: string
+	/**
+	 * S​e​p​a​r​a​t​e​d​ ​b​y​ ​s​p​a​c​e​s​.​ ​C​l​e​a​r​i​n​g​ ​i​t​ ​r​e​m​o​v​e​s​ ​e​v​e​r​y​ ​s​u​p​p​l​e​m​e​n​t​a​r​y​ ​m​e​m​b​e​r​.​ ​P​r​i​m​a​r​y​-​g​r​o​u​p​ ​m​e​m​b​e​r​s​h​i​p​ ​i​s​ ​s​e​t​ ​o​n​ ​t​h​e​ ​a​c​c​o​u​n​t​.
+	 */
+	groupMembersHint: string
+	/**
+	 * N​o​ ​g​r​o​u​p​ ​m​a​t​c​h​e​s​ ​t​h​e​ ​f​i​l​t​e​r​.
+	 */
+	groupNoMatch: string
+	/**
+	 * T​h​a​t​ ​g​r​o​u​p​ ​i​s​ ​n​o​ ​l​o​n​g​e​r​ ​i​n​ ​t​h​e​ ​c​a​t​a​l​o​g​.​ ​T​h​e​ ​l​i​s​t​ ​h​a​s​ ​b​e​e​n​ ​r​e​a​d​ ​a​g​a​i​n​.
+	 */
+	groupNoSuchGroup: string
+	/**
+	 * T​h​e​ ​r​o​o​t​ ​g​r​o​u​p​ ​c​a​n​n​o​t​ ​b​e​ ​r​e​m​o​v​e​d​.
+	 */
+	groupRootNotDeletable: string
+	/**
+	 * N​a​m​e​,​ ​m​e​m​b​e​r​ ​o​r​ ​G​I​D
+	 */
+	groupSearchHint: string
+	/**
+	 * {​c​o​u​n​t​}​ ​g​r​o​u​p​s
+	 * @param {unknown} count
+	 */
+	groupSubtitle: RequiredParams<'count'>
+	/**
+	 * S​y​s​t​e​m​ ​g​r​o​u​p
+	 */
+	groupSystem: string
 	/**
 	 * U​s​e​r​s
 	 */
@@ -8116,7 +8209,7 @@ export type TranslationFunctions = {
 	 */
 	userRemoveHome: () => LocalizedString
 	/**
-	 * A user cannot be renamed here: the name is what every file and process on the machine knows it by.
+	 * A user or group cannot be renamed here: the name is what every file and process on the machine knows it by.
 	 */
 	userRenaming: () => LocalizedString
 	/**
@@ -8171,6 +8264,94 @@ export type TranslationFunctions = {
 	 * A user with that name already exists.
 	 */
 	userUserExists: () => LocalizedString
+	/**
+	 * Users
+	 */
+	usersTab: () => LocalizedString
+	/**
+	 * Groups
+	 */
+	groupsTab: () => LocalizedString
+	/**
+	 * New group
+	 */
+	groupAdd: () => LocalizedString
+	/**
+	 * Delete group
+	 */
+	groupDelete: () => LocalizedString
+	/**
+	 * Delete {name}? Accounts that carry it as a supplementary group lose that membership; anything using the gid keeps running.
+	 */
+	groupDeleteConfirm: (arg: { name: unknown }) => LocalizedString
+	/**
+	 * Created {name}.
+	 */
+	groupDoneCreated: (arg: { name: unknown }) => LocalizedString
+	/**
+	 * Removed {name}.
+	 */
+	groupDoneDeleted: (arg: { name: unknown }) => LocalizedString
+	/**
+	 * Changed {name}.
+	 */
+	groupDoneEdited: (arg: { name: unknown }) => LocalizedString
+	/**
+	 * Edit group
+	 */
+	groupEdit: () => LocalizedString
+	/**
+	 * No groups on this machine.
+	 */
+	groupEmpty: () => LocalizedString
+	/**
+	 * A group with that name already exists.
+	 */
+	groupExists: () => LocalizedString
+	/**
+	 * GID
+	 */
+	groupGid: () => LocalizedString
+	/**
+	 * That group is someone’s primary group, so it is not removed here.
+	 */
+	groupInUse: () => LocalizedString
+	/**
+	 * That is not a user name this machine accepts as a group member.
+	 */
+	groupInvalidMember: () => LocalizedString
+	/**
+	 * Members
+	 */
+	groupMembers: () => LocalizedString
+	/**
+	 * Separated by spaces. Clearing it removes every supplementary member. Primary-group membership is set on the account.
+	 */
+	groupMembersHint: () => LocalizedString
+	/**
+	 * No group matches the filter.
+	 */
+	groupNoMatch: () => LocalizedString
+	/**
+	 * That group is no longer in the catalog. The list has been read again.
+	 */
+	groupNoSuchGroup: () => LocalizedString
+	/**
+	 * The root group cannot be removed.
+	 */
+	groupRootNotDeletable: () => LocalizedString
+	/**
+	 * Name, member or GID
+	 */
+	groupSearchHint: () => LocalizedString
+	/**
+	 * {count} groups
+	 */
+	groupSubtitle: (arg: { count: unknown }) => LocalizedString
+	/**
+	 * System group
+	 */
+	groupSystem: () => LocalizedString
 	/**
 	 * Users
 	 */

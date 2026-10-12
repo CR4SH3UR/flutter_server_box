@@ -28,12 +28,22 @@ export function userRefusalText(code: string): string {
       return ll.userRenaming()
     case 'rootNotDeletable':
       return ll.userRootNotDeletable()
+    case 'groupInUse':
+      return ll.groupInUse()
+    case 'rootGroupNotDeletable':
+      return ll.groupRootNotDeletable()
+    case 'invalidGroupMember':
+      return ll.groupInvalidMember()
     case 'userExists':
       return ll.userUserExists()
+    case 'groupExists':
+      return ll.groupExists()
     case 'agentAccount':
       return ll.userAgentAccount()
     case 'noSuchUser':
       return ll.userNoSuchUser()
+    case 'noSuchGroup':
+      return ll.groupNoSuchGroup()
     case 'unsupportedPlatform':
       return ll.userUnsupportedPlatform()
     case 'unreadable':

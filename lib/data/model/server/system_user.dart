@@ -52,11 +52,60 @@ final class ServerUser {
   }
 }
 
+final class ServerGroup {
+  const ServerGroup({
+    required this.name,
+    required this.gid,
+    required this.members,
+  });
+
+  final String name;
+  final int gid;
+
+  /// Accounts listed in `/etc/group` for this group (supplementary members).
+  final List<String> members;
+
+  /// `sbm_parser::users::SystemGroup` as serde writes it.
+  factory ServerGroup.fromJson(Map<String, Object?> json) => ServerGroup(
+    name: json['name'] as String,
+    gid: json['gid'] as int,
+    members: (json['members'] as List).cast<String>(),
+  );
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'gid': gid,
+    'members': members,
+  };
+
+  bool isSystem(int uidMin) => gid < uidMin;
+}
+
+final class ServerGroupDraft {
+  const ServerGroupDraft({
+    required this.name,
+    required this.members,
+    required this.system,
+  });
+
+  final String name;
+  final List<String> members;
+  final bool system;
+
+  /// `sbm_parser::users::GroupDraft` as serde reads it.
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'members': members,
+    'system': system,
+  };
+}
+
 final class ServerUserCatalog {
   const ServerUserCatalog({
     required this.currentUser,
     required this.uidMin,
     required this.users,
+    required this.groups,
   });
 
   /// `sbm_parser::users::UserCatalog` as serde writes it.
@@ -68,11 +117,23 @@ final class ServerUserCatalog {
           for (final user in json['users'] as List)
             ServerUser.fromJson(user as Map<String, Object?>),
         ],
+        groups: [
+          for (final group in (json['groups'] as List? ?? const []))
+            ServerGroup.fromJson(group as Map<String, Object?>),
+        ],
       );
 
   final String currentUser;
   final int uidMin;
   final List<ServerUser> users;
+  final List<ServerGroup> groups;
+
+  Map<String, Object?> toJson() => {
+    'current_user': currentUser,
+    'uid_min': uidMin,
+    'users': [for (final user in users) user.toJson()],
+    'groups': [for (final group in groups) group.toJson()],
+  };
 }
 
 final class ServerUserDraft {

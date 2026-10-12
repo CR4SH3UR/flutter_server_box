@@ -41,6 +41,11 @@ const view = (): UserView => ({
     row('agent', 1000, { agent_account: true, deletable: false }),
     row('deploy', 1001),
   ],
+  groups: [
+    { name: 'root', gid: 0, members: [], system: true, deletable: false },
+    { name: 'users', gid: 1000, members: ['agent'], system: false, deletable: false },
+    { name: 'docker', gid: 998, members: ['agent', 'deploy'], system: true, deletable: true },
+  ],
   name: null,
   detail: null,
 })
@@ -98,8 +103,17 @@ describe('System users page', () => {
       agent_account: null,
       uid_min: null,
       users: [],
+      groups: [],
     })
     render(SystemUsers, { onback: () => {} })
     expect(await screen.findByText(/linux/i)).toBeInTheDocument()
+  })
+
+  it('lists groups and opens one for edit', async () => {
+    render(SystemUsers, { onback: () => {} })
+    await fireEvent.click(await screen.findByRole('button', { name: /^groups$/i }))
+    await fireEvent.click(await screen.findByRole('button', { name: /^docker/ }))
+    expect(screen.getByRole('button', { name: /edit group/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /delete group/i })).toBeEnabled()
   })
 })

@@ -3632,6 +3632,55 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{func} is not available over this server\'s connection.'**
+
+  /// Tab label for the system users half of the users page.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get usersTab;
+
+  /// Tab label for the system groups half of the users page.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groupsTab;
+
+  /// User-facing label for a system group id.
+  ///
+  /// In en, this message translates to:
+  /// **'GID'**
+  String get groupGid;
+
+  /// User-facing label for supplementary members of a system group.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get groupMembers;
+
+  /// Help text for editing system group members.
+  ///
+  /// In en, this message translates to:
+  /// **'Separated by spaces or commas. Clearing it removes every supplementary member.'**
+  String get groupMembersHint;
+
+  /// Badge and checkbox label for a system group.
+  ///
+  /// In en, this message translates to:
+  /// **'System group'**
+  String get groupSystem;
+
+  /// Why a system group cannot be removed.
+  ///
+  /// In en, this message translates to:
+  /// **'That group is someone\'s primary group, so it cannot be deleted.'**
+  String get groupInUse;
+
+  /// Refusal when deleting the root group.
+  ///
+  /// In en, this message translates to:
+  /// **'The root group cannot be deleted.'**
+  String get groupRootNotDeletable;
+
   String funcUnavailableFmt(String func);
 
   /// No description provided for @funcNeedsAgentGrant.

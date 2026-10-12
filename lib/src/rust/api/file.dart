@@ -3,20 +3,19 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:server_box/src/rust/frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `copy_file_exclusive_impl`
 
-/// Copies `source` into a newly created `destination` without following an
+            // These functions are ignored because they are not marked as `pub`: `copy_file_exclusive_impl`
+
+
+            /// Copies `source` into a newly created `destination` without following an
 /// existing destination symlink or replacing any existing entry.
 ///
 /// The exclusive create and all writes use the same file descriptor. Returns
 /// `false` when another entry already owns the destination name.
-Future<bool> copyFileExclusive({
-  required String source,
-  required String destination,
-}) => RustLib.instance.api.crateApiFileCopyFileExclusive(
-  source: source,
-  destination: destination,
-);
+Future<bool>  copyFileExclusive({required String source , required String destination }) => RustLib.instance.api.crateApiFileCopyFileExclusive(source: source, destination: destination);
+
+            
+            

@@ -2642,6 +2642,38 @@
   "@userPasswordEditTip": {
     "description": "Help text for the user password edit setting or action."
   },
+  "usersTab": "Users",
+  "@usersTab": {
+    "description": "Tab label for the system users half of the users page."
+  },
+  "groupsTab": "Groups",
+  "@groupsTab": {
+    "description": "Tab label for the system groups half of the users page."
+  },
+  "groupGid": "GID",
+  "@groupGid": {
+    "description": "User-facing label for a system group id."
+  },
+  "groupMembers": "Members",
+  "@groupMembers": {
+    "description": "User-facing label for supplementary members of a system group."
+  },
+  "groupMembersHint": "Separated by spaces or commas. Clearing it removes every supplementary member.",
+  "@groupMembersHint": {
+    "description": "Help text for editing system group members."
+  },
+  "groupSystem": "System group",
+  "@groupSystem": {
+    "description": "Badge and checkbox label for a system group."
+  },
+  "groupInUse": "That group is someone's primary group, so it cannot be deleted.",
+  "@groupInUse": {
+    "description": "Why a system group cannot be removed."
+  },
+  "groupRootNotDeletable": "The root group cannot be deleted.",
+  "@groupRootNotDeletable": {
+    "description": "Refusal when deleting the root group."
+  },
   "funcUnavailableFmt": "{func} is not available over this server's connection.",
   "@funcUnavailableFmt": {
     "description": "Formatted user-facing message for func unavailable; runtime values are supplied by placeholders.",

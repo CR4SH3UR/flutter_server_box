@@ -43,7 +43,7 @@ async fn both_halves_need_the_shell_grant() {
     assert!(rows.iter().all(|(action, _, subject, _)| action == "denied" && subject.as_deref() == Some("viewer")));
     // The action and the account, and neither password.
     let detail = rows[1].3.as_deref().unwrap();
-    assert_eq!(detail, "system-users create svc: shell not_granted");
+    assert_eq!(detail, "system-users user create svc: shell not_granted");
 }
 
 /// A listing on Linux, and a reason everywhere else. A read is not audited, so
@@ -55,6 +55,7 @@ async fn the_read_lists_the_machine_or_says_why_not() {
     assert_eq!(status, 200, "{body}");
     assert_eq!(body["part"], "list");
     assert!(body["users"].is_array(), "{body}");
+    assert!(body["groups"].is_array(), "{body}");
     if system_type() != SystemType::Linux {
         assert_eq!(body["available"], false);
         assert_eq!(body["reason_kind"], "unsupported_platform", "{body}");

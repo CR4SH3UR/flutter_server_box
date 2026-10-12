@@ -77,6 +77,15 @@ fn parses_passwd_and_group_catalogs() {
     assert_eq!(admin.primary_group.as_deref(), Some("users"));
     assert_eq!(admin.supplementary_groups, ["docker"]);
     assert!(!admin.is_system(catalog.uid_min));
+
+    assert_eq!(catalog.groups.len(), 3);
+    let docker = catalog.find_group("docker").expect("the fixture has it");
+    assert_eq!(docker.gid, 998);
+    assert_eq!(docker.members, ["admin", "deploy"]);
+    assert!(docker.is_system(catalog.uid_min));
+    let users = catalog.find_group("users").expect("the fixture has it");
+    assert_eq!(users.members, ["admin"]);
+    assert!(!users.is_system(catalog.uid_min));
 }
 
 #[test]
@@ -533,4 +542,108 @@ fn root_is_refused_by_name_as_well_as_uid() {
         supplementary_groups: Vec::new(),
     };
     assert_eq!(delete_command(&forged, false), Err(UserError::RootNotDeletable));
+}
+
+// ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+fn group_draft(name: &str) -> GroupDraft {
+    GroupDraft {
+        name: name.to_string(),
+        members: Vec::new(),
+        system: false,
+    }
+}
+
+#[test]
+fn the_groups_are_ordered_by_gid_and_then_by_name() {
+    let catalog = parse_list(
+        "SrvBoxUsers.Current\tadmin\n\
+SrvBoxUsers.UidMin\t1000\n\
+SrvBoxUsers.Passwd\n\
+admin:x:1000:1000::/home/admin:/bin/sh\n\
+SrvBoxUsers.Group\n\
+b:x:1001:\n\
+a:x:1001:\n\
+root:x:0:\n",
+    )
+    .expect("the listing parses");
+
+    let names: Vec<&str> = catalog.groups.iter().map(|group| group.name.as_str()).collect();
+    assert_eq!(names, ["root", "a", "b"]);
+}
+
+#[test]
+fn builds_a_quoted_create_group_script_and_sets_members_through_gpasswd() {
+    let mut draft = group_draft("devs");
+    draft.members = vec!["admin".to_string(), "deploy".to_string()];
+    assert_eq!(
+        create_group_command(&draft).expect("a valid draft"),
+        "set -e\ngroupadd 'devs'\ngpasswd -M 'admin,deploy' 'devs'"
+    );
+
+    let mut system = group_draft("svc");
+    system.system = true;
+    assert_eq!(
+        create_group_command(&system).expect("a valid draft"),
+        "groupadd -r 'svc'"
+    );
+}
+
+#[test]
+fn edits_only_the_group_members_that_changed() {
+    let original = SystemGroup {
+        name: "docker".to_string(),
+        gid: 998,
+        members: vec!["admin".to_string(), "deploy".to_string()],
+    };
+    let mut same = group_draft("docker");
+    same.members = original.members.clone();
+    assert_eq!(edit_group_command(&original, &same).expect("noop"), ":");
+
+    let cleared = group_draft("docker");
+    assert_eq!(
+        edit_group_command(&original, &cleared).expect("clear"),
+        "gpasswd -M '' 'docker'"
+    );
+
+    let mut renamed = group_draft("containers");
+    renamed.members = original.members.clone();
+    assert_eq!(
+        edit_group_command(&original, &renamed),
+        Err(UserError::Renaming)
+    );
+}
+
+#[test]
+fn a_group_in_use_as_a_primary_group_is_not_deleted() {
+    let catalog = parse_list(LISTING).expect("the listing parses");
+    let users = catalog.find_group("users").expect("the fixture has it");
+    assert_eq!(
+        delete_group_command(users, &catalog),
+        Err(UserError::GroupInUse)
+    );
+
+    let docker = catalog.find_group("docker").expect("the fixture has it");
+    assert_eq!(
+        delete_group_command(docker, &catalog).expect("supplementary only"),
+        "groupdel 'docker'"
+    );
+
+    let root = catalog.find_group("root").expect("the fixture has it");
+    assert_eq!(
+        delete_group_command(root, &catalog),
+        Err(UserError::RootGroupNotDeletable)
+    );
+}
+
+#[test]
+fn an_invalid_group_member_is_refused() {
+    let mut draft = group_draft("devs");
+    draft.members = vec!["not a name".to_string()];
+    assert_eq!(
+        create_group_command(&draft),
+        Err(UserError::InvalidGroupMember)
+    );
 }
