@@ -22,7 +22,9 @@
 # see the branch below, which is the only place the two really diverge.
 set -u
 
-REPO="lollipopkit/flutter_server_box"
+# Override with SBM_REPO=owner/repo to install a fork's monitor-v* release
+# (this script's default tracks upstream).
+REPO="${SBM_REPO:-lollipopkit/flutter_server_box}"
 SERVICE="server_box_monitor.service"
 RC_SERVICE="server-box-monitor"
 TMP_DIR="${TMPDIR:-/tmp}/server-box-monitor-install"
