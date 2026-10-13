@@ -119,10 +119,10 @@ jobs:
           #           target: x86_64-apple-darwin
           #           platform: macos
           #           arch: amd64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            platform: windows
-            arch: amd64
+          #- os: windows-latest
+           # target: x86_64-pc-windows-msvc
+          #  platform: windows
+       #     arch: amd64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
@@ -223,79 +223,79 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  docker:
-    name: Publish image to ghcr.io
-    needs: [meta, frontend, native]
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          lfs: true
-          persist-credentials: false
+  #docker:
+  #  name: Publish image to ghcr.io
+  #  needs: [meta, frontend, native]
+   # runs-on: ubuntu-latest
+  #  timeout-minutes: 20
+   # permissions:
+   #   contents: read
+   #   packages: write
+ #   steps:
+    #  - name: Checkout
+     #   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273b#a90b1 # v7
+     #   with:
+        #  lfs: true
+      #    persist-credentials: false
 
-      - name: Download frontend dist
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: monitor-frontend-dist
-          path: monitor/frontend/dist
+    #  - name: Download frontend dist
+    #    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+    #    with:
+     #     name: monitor-frontend-dist
+     #     path: monitor/frontend/dist
 
-      - name: Download linux bins
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: monitor-bin-linux-*
-          path: dist/bins
+    #  - name: Download linux bins
+   #     uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+   #     with:
+    #      pattern: monitor-bin-linux-*
+    #      path: dist/bins
 
-      - name: Arrange Docker context
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p dist/docker/amd64 dist/docker/arm64
-          mv dist/bins/monitor-bin-linux-amd64/server_box_monitor dist/docker/amd64/
-          mv dist/bins/monitor-bin-linux-arm64/server_box_monitor dist/docker/arm64/
+   #   - name: Arrange Docker context
+    #    shell: bash
+   #     run: |
+   #       set -euo pipefail
+    #      mkdir -p dist/docker/amd64 dist/docker/arm64
+     #     mv dist/bins/monitor-bin-linux-amd64/server_box_monitor dist/docker/amd64/
+      #    mv dist/bins/monitor-bin-linux-arm64/server_box_monitor dist/docker/arm64/
 
-      - name: Login to ghcr.io
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #    - name: Login to ghcr.io
+    #    uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+   #     with:
+  #        registry: ghcr.io
+   #       username: ${{ github.actor }}
+    #      password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Refuse to overwrite published version
-        if: inputs.overwrite != true
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag="${IMAGE}:${{ needs.meta.outputs.version }}"
-          if docker manifest inspect "$tag" > /dev/null 2>&1; then
-            echo "$tag already exists on ghcr.io."
-            echo "Bump the version in monitor/Cargo.toml, or re-run with overwrite=true."
-            exit 1
-          fi
+  #    - name: Refuse to overwrite published version
+  #      if: inputs.overwrite != true
+   #     shell: bash
+   #     run: |
+    #      set -euo pipefail
+    #      tag="${IMAGE}:${{ needs.meta.outputs.version }}"
+    #      if docker manifest inspect "$tag" > /dev/null 2>&1; then
+     #       echo "$tag already exists on ghcr.io."
+       #     echo "Bump the version in monitor/#Cargo.toml, or re-run with overwrite=true."
+     #       exit 1
+     #     fi
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+   #   - name: Set up Docker Buildx
+  #      uses: docker/setup-buildx-#action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       # COPY prebuilt artifacts only; multi-arch images without QEMU
-      - name: Build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
-        with:
-          context: .
-          file: monitor/Dockerfile.ci
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:${{ needs.meta.outputs.version }}
-            ${{ env.IMAGE }}:latest
-          labels: |
-            org.opencontainers.image.title=server-box-monitor
-            org.opencontainers.image.version=${{ needs.meta.outputs.version }}
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
+  #    - name: Build and push
+  #      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+   #     with:
+  #        context: .
+      #    file: monitor/Dockerfile.ci
+   #       platforms: linux/amd64,linux/arm64
+      #    push: true
+          #tags: |
+   #         ${{ env.IMAGE }}:${{ needs.meta.outputs.version }}
+    #        ${{ env.IMAGE }}:latest
+      #    labels: |
+        #    org.opencontainers.image.title=server-box-monitor
+      #      org.opencontainers.image.version=${{ needs.meta.outputs.version }}
+      #      org.opencontainers.image.source=https://github.com/${{ github.repository }}
+    #        org.opencontainers.image.revision=${{ github.sha }}
 
   release:
     name: Create GitHub Release
