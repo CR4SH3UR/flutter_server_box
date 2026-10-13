@@ -1,0 +1,12 @@
+id = "serverbox.monokai-pro"
+name = "Monokai Pro"
+homepage = "https://github.com/lollipopkit/flutter_server_box/tree/main/store/themes/serverbox.monokai-pro"
+license = "MIT"
+
+[description]
+en = "Inspired by Monokai Pro's dark filter: warm charcoal surfaces, cyan accent, pink / purple / green syntax colors, tight editor-style corners. Dark only."
+zh = "受 Monokai Pro 深色滤镜启发：暖炭色表面、青色强调、粉/紫/绿语法色、紧凑的编辑器风格圆角。仅深色。"
+zh-TW = "受 Monokai Pro 深色濾鏡啟發：暖炭色表面、青色強調、粉/紫/綠語法色、緊湊的編輯器風格圓角。僅深色。"
+
+# Versions are appended by scripts/publish-themes.py, which packs the folder
+# beside this file and records the digest of what it built.

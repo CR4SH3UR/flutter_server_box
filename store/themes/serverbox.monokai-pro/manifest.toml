@@ -1,0 +1,258 @@
+#:schema https://raw.githubusercontent.com/lollipopkit/flutter_server_box/main/docs/schemas/fsbt-manifest.schema.json
+# Palette inspired by Monokai Pro's dark filter (https://monokai.pro/):
+# background #2d2a2e, foreground #fcfcfa, accents pink/orange/yellow/green/
+# cyan/purple. Colors themselves are not claimed; the name "Monokai Pro" is
+# the product's identity, so this package is "Monokai Pro-inspired".
+
+id = "serverbox.monokai-pro"
+name = "Monokai Pro"
+modes = ["dark"]
+
+# Schema 3 for editor-style components (search, text/icon buttons, sidebar…).
+[schema]
+min = 3
+max = 3
+
+[colors]
+mode = 2
+seed = 0xFF78DCE8
+
+# Editor background for the page, slightly lifted panels for cards, and the
+# syntax accents as Material roles.
+[colors.palette.dark]
+primary = 0xFF78DCE8
+onPrimary = 0xFF2D2A2E
+primaryContainer = 0xFF2A4A50
+onPrimaryContainer = 0xFFD4F5F9
+secondary = 0xFFAB9DF2
+onSecondary = 0xFF2D2A2E
+secondaryContainer = 0xFF3D3658
+onSecondaryContainer = 0xFFE8E2FC
+tertiary = 0xFFA9DC76
+onTertiary = 0xFF2D2A2E
+tertiaryContainer = 0xFF3A4F2C
+onTertiaryContainer = 0xFFE3F5D4
+error = 0xFFFF6188
+onError = 0xFF2D2A2E
+errorContainer = 0xFF5A2A36
+onErrorContainer = 0xFFFFD6E0
+surface = 0xFF2D2A2E
+surfaceDim = 0xFF282528
+surfaceBright = 0xFF4A464C
+surfaceContainerLowest = 0xFF221F23
+surfaceContainerLow = 0xFF332F34
+surfaceContainer = 0xFF3A363C
+surfaceContainerHigh = 0xFF423F46
+surfaceContainerHighest = 0xFF4A464C
+onSurface = 0xFFFCFCFA
+# Comment #727072 is under 4.5:1 on this surface; lightened for legibility.
+onSurfaceVariant = 0xFFA9A6A9
+outline = 0xFF8E8B8E
+outlineVariant = 0xFF423F46
+inverseSurface = 0xFFFCFCFA
+onInverseSurface = 0xFF2D2A2E
+inversePrimary = 0xFF2A8A96
+shadow = 0xFF000000
+scrim = 0xFF000000
+surfaceTint = 0x00000000
+
+[shapes]
+card = 8
+tile = 6
+button = 6
+
+[components.card]
+backgroundColor = "surfaceContainer"
+radius = 8
+borderWidth = 0
+elevation = 0
+surfaceTintColor = 0
+margin = [5, 4, 5, 4]
+
+[components.tile]
+selectedTileColor = "surfaceContainerHigh"
+selectedColor = "onSurface"
+iconColor = "onSurfaceVariant"
+radius = 6
+
+[components.button]
+backgroundColor = "primary"
+foregroundColor = "onPrimary"
+radius = 6
+elevation = 0
+padding = [16, 9, 16, 9]
+minHeight = 34
+
+[components.button.hovered]
+backgroundColor = 0xFF8FE4EE
+
+[components.button.pressed]
+overlayColor = 0x26000000
+
+[components.button.focused]
+borderColor = "secondary"
+borderWidth = 2
+
+[components.button.disabled]
+backgroundColor = "surfaceContainerHighest"
+foregroundColor = "outline"
+
+[components.input]
+filled = true
+fillColor = "surfaceContainerLowest"
+radius = 6
+borderColor = "outlineVariant"
+borderWidth = 1
+focusedBorderColor = "primary"
+errorBorderColor = "error"
+padding = [12, 8, 12, 8]
+
+[components.navigation]
+backgroundColor = "surfaceContainerLowest"
+indicatorColor = "primaryContainer"
+indicatorRadius = 8
+selectedIconColor = "primary"
+unselectedIconColor = "outline"
+selectedLabelColor = "primary"
+unselectedLabelColor = "onSurfaceVariant"
+elevation = 0
+
+[components.dialog]
+backgroundColor = "surfaceContainerHigh"
+radius = 10
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 0
+surfaceTintColor = 0
+barrierColor = 0x99000000
+
+[components.sheet]
+backgroundColor = "surfaceContainer"
+radius = 14
+elevation = 0
+surfaceTintColor = 0
+dragHandleColor = "outline"
+
+[components.textButton]
+foregroundColor = "primary"
+overlayColor = 0x1478DCE8
+radius = 4
+padding = [8, 4, 8, 4]
+minHeight = 28
+
+[components.textButton.disabled]
+foregroundColor = "outline"
+
+[components.outlinedButton]
+foregroundColor = "onSurface"
+borderColor = "outlineVariant"
+borderWidth = 1
+radius = 6
+padding = [14, 6, 14, 6]
+minHeight = 32
+
+[components.outlinedButton.hovered]
+borderColor = "primary"
+
+[components.iconButton]
+foregroundColor = "onSurfaceVariant"
+overlayColor = 0x14FCFCFA
+radius = 4
+iconSize = 18
+
+[components.search]
+backgroundColor = "surfaceContainerLowest"
+radius = 6
+borderColor = "outlineVariant"
+borderWidth = 1
+iconColor = "outline"
+textColor = "onSurface"
+hintColor = "outline"
+height = 30
+
+[components.appBar]
+backgroundColor = "surface"
+foregroundColor = "onSurface"
+iconColor = "onSurfaceVariant"
+elevation = 0
+surfaceTintColor = 0
+
+[components.segmented]
+backgroundColor = "surfaceContainerLowest"
+selectedColor = "surfaceContainerHigh"
+textColor = "onSurfaceVariant"
+selectedTextColor = "onSurface"
+radius = 6
+
+[components.sidebar]
+selectedColor = "surfaceContainerHigh"
+textColor = "onSurfaceVariant"
+selectedTextColor = "onSurface"
+iconColor = "outline"
+selectedIconColor = "primary"
+radius = 4
+
+[components.menu]
+backgroundColor = "surfaceContainerLow"
+textColor = "onSurface"
+radius = 6
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 2
+surfaceTintColor = 0
+
+[components.tooltip]
+backgroundColor = "surfaceContainerHighest"
+textColor = "onSurface"
+radius = 4
+borderColor = "outlineVariant"
+borderWidth = 1
+padding = [8, 4, 8, 4]
+
+[components.toast]
+backgroundColor = "surfaceContainerHigh"
+textColor = "onSurface"
+radius = 6
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 2
+
+[components.switch]
+thumbColor = "outline"
+trackColor = "surfaceContainerHighest"
+trackOutlineColor = "outlineVariant"
+selectedThumbColor = "onPrimary"
+selectedTrackColor = "primary"
+selectedTrackOutlineColor = 0
+
+[components.slider]
+activeTrackColor = "primary"
+inactiveTrackColor = "outlineVariant"
+thumbColor = "primary"
+trackHeight = 3
+
+[components.progress]
+color = "primary"
+trackColor = "outlineVariant"
+thickness = 3
+radius = 2
+
+[components.badge]
+backgroundColor = "primary"
+textColor = "onPrimary"
+
+[components.chip]
+backgroundColor = "surfaceContainerHigh"
+selectedColor = "surfaceContainerHighest"
+textColor = "onSurface"
+radius = 4
+borderWidth = 0
+
+[components.divider]
+color = "outlineVariant"
+thickness = 1
+
+[components.scrollbar]
+thumbColor = 0x80727072
+radius = 3
+thickness = 6
