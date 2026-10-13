@@ -553,6 +553,7 @@ fn group_draft(name: &str) -> GroupDraft {
         name: name.to_string(),
         members: Vec::new(),
         system: false,
+        gid: None,
     }
 }
 
@@ -589,10 +590,17 @@ fn builds_a_quoted_create_group_script_and_sets_members_through_gpasswd() {
         create_group_command(&system).expect("a valid draft"),
         "groupadd -r 'svc'"
     );
+
+    let mut with_gid = group_draft("devs");
+    with_gid.gid = Some(1500);
+    assert_eq!(
+        create_group_command(&with_gid).expect("a valid draft"),
+        "groupadd -g 1500 'devs'"
+    );
 }
 
 #[test]
-fn edits_only_the_group_members_that_changed() {
+fn edits_the_group_gid_and_members_that_changed() {
     let original = SystemGroup {
         name: "docker".to_string(),
         gid: 998,
@@ -600,6 +608,7 @@ fn edits_only_the_group_members_that_changed() {
     };
     let mut same = group_draft("docker");
     same.members = original.members.clone();
+    same.gid = Some(original.gid);
     assert_eq!(edit_group_command(&original, &same).expect("noop"), ":");
 
     let cleared = group_draft("docker");
@@ -608,11 +617,39 @@ fn edits_only_the_group_members_that_changed() {
         "gpasswd -M '' 'docker'"
     );
 
+    let mut gid_only = group_draft("docker");
+    gid_only.members = original.members.clone();
+    gid_only.gid = Some(1200);
+    assert_eq!(
+        edit_group_command(&original, &gid_only).expect("gid"),
+        "groupmod -g 1200 'docker'"
+    );
+
+    let mut both = group_draft("docker");
+    both.members = vec!["admin".to_string()];
+    both.gid = Some(1200);
+    assert_eq!(
+        edit_group_command(&original, &both).expect("gid and members"),
+        "set -e\ngroupmod -g 1200 'docker'\ngpasswd -M 'admin' 'docker'"
+    );
+
     let mut renamed = group_draft("containers");
     renamed.members = original.members.clone();
     assert_eq!(
         edit_group_command(&original, &renamed),
         Err(UserError::Renaming)
+    );
+
+    let root = SystemGroup {
+        name: "root".to_string(),
+        gid: 0,
+        members: Vec::new(),
+    };
+    let mut root_gid = group_draft("root");
+    root_gid.gid = Some(1);
+    assert_eq!(
+        edit_group_command(&root, &root_gid),
+        Err(UserError::RootGroupNotDeletable)
     );
 }
 

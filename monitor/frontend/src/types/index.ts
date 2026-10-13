@@ -1530,6 +1530,9 @@ export interface GroupDraft {
   name: string
   members: string[]
   system: boolean
+  /// The gid to set. Omitted or null leaves it alone on edit, or lets
+  /// `groupadd` pick one on create.
+  gid?: number | null
 }
 
 /// What a caller wants an account to be — the same fields for a new account and
