@@ -1987,6 +1987,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ajoutez d’abord un serveur, puis revenez pour lancer le benchmark.';
 
   @override
+  String get startupFailedTitle => 'ServerBox n’a pas pu démarrer';
+
+  @override
+  String get startupFailedBody =>
+      'Une erreur s’est produite à l’ouverture. Le détail ci-dessous peut aider à signaler le problème. Fermez l’application et réessayez ; si ça continue, réinstallez-la ou effacez ses données.';
+
+  @override
   String get schemaTooNewTitle =>
       'Ces données sont plus récentes que l’application';
 
@@ -2113,19 +2120,31 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get usersTab => 'Utilisateurs';
 
+  @override
   String get groupsTab => 'Groupes';
 
+  @override
   String get groupGid => 'GID';
 
+  @override
   String get groupMembers => 'Membres';
 
-  String get groupMembersHint => 'Séparés par des espaces ou des virgules. Vider le champ retire tous les membres supplémentaires.';
+  @override
+  String get groupMembersHint =>
+      'Séparés par des espaces ou des virgules. Vider le champ retire tous les membres supplémentaires.';
 
+  @override
   String get groupSystem => 'Groupe système';
 
-  String get groupInUse => 'Ce groupe est le groupe principal de quelqu’un, il ne peut pas être supprimé.';
+  @override
+  String get groupInUse =>
+      'Ce groupe est le groupe principal de quelqu’un, il ne peut pas être supprimé.';
 
-  String get groupRootNotDeletable => 'Le groupe root ne peut pas être supprimé.';
+  @override
+  String get groupRootNotDeletable =>
+      'Le groupe root ne peut pas être supprimé.';
+
+  @override
   String funcUnavailableFmt(String func) {
     return '$func n\'est pas disponible via la connexion de ce serveur.';
   }

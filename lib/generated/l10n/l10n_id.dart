@@ -1962,6 +1962,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tambahkan server terlebih dahulu, lalu kembali untuk menjalankan benchmark.';
 
   @override
+  String get startupFailedTitle => 'ServerBox could not start';
+
+  @override
+  String get startupFailedBody =>
+      'Something went wrong while opening the app. The detail below can help report the problem. Close the app and try again; if it keeps failing, reinstall or clear the app\'s data.';
+
+  @override
   String get schemaTooNewTitle => 'Data ini lebih baru daripada aplikasi';
 
   @override
@@ -2087,19 +2094,30 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get usersTab => 'Users';
 
+  @override
   String get groupsTab => 'Groups';
 
+  @override
   String get groupGid => 'GID';
 
+  @override
   String get groupMembers => 'Members';
 
-  String get groupMembersHint => 'Separated by spaces or commas. Clearing it removes every supplementary member.';
+  @override
+  String get groupMembersHint =>
+      'Separated by spaces or commas. Clearing it removes every supplementary member.';
 
+  @override
   String get groupSystem => 'System group';
 
-  String get groupInUse => 'That group is someone\'s primary group, so it cannot be deleted.';
+  @override
+  String get groupInUse =>
+      'That group is someone\'s primary group, so it cannot be deleted.';
 
+  @override
   String get groupRootNotDeletable => 'The root group cannot be deleted.';
+
+  @override
   String funcUnavailableFmt(String func) {
     return '$func tidak tersedia melalui koneksi server ini.';
   }
