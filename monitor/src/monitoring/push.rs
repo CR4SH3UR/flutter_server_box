@@ -116,6 +116,7 @@ pub async fn send_notification(config: &Config, push: &PushConfig, message: &str
         "serverchan" => send_serverchan_notification(config, push, message).await,
         "server_chan" => send_serverchan_notification(config, push, message).await, // Go compatibility
         "bark" => send_bark_notification(config, push, message).await,
+        "ntfy" => send_ntfy_notification(config, push, message).await,
         "ios" => send_ios_notification(config, push, message).await,
         _ => {
             warn!("Unknown push type: {}", push.push_type);
@@ -332,6 +333,83 @@ async fn send_bark_notification(config: &Config, push: &PushConfig, message: &st
     validate_response(push, status.as_u16(), &response_text)?;
     info!("Bark notification sent successfully to {}", push.name);
     
+    Ok(())
+}
+
+/// Publish to an [ntfy](https://ntfy.sh) topic: `POST {server}/{topic}` with
+/// the message as the body and optional `Title` / `Priority` / `Tags` headers.
+///
+/// Auth is optional. A `token` becomes `Authorization: Bearer …`; otherwise
+/// `username` + `password` become HTTP Basic. The topic itself is the access
+/// secret on a public server, so the API treats it as a credential.
+async fn send_ntfy_notification(config: &Config, push: &PushConfig, message: &str) -> Result<()> {
+    let client = http_client();
+
+    let server = push
+        .config
+        .get("server")
+        .and_then(|v| v.as_str())
+        .unwrap_or("https://ntfy.sh")
+        .trim_end_matches('/');
+    let topic = push
+        .config
+        .get("topic")
+        .and_then(|v| v.as_str())
+        .filter(|topic| !topic.is_empty())
+        .ok_or_else(|| {
+            crate::utils::error::MonitorError::Push("Missing ntfy topic".to_string())
+        })?;
+
+    let title = push
+        .config
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("ServerBox Monitor");
+    let body = push
+        .config
+        .get("message")
+        .or_else(|| push.config.get("body"))
+        .and_then(|v| v.as_str())
+        .unwrap_or(message);
+
+    let title = replace_template_string(title, message, &config.get_server_name());
+    let body = replace_template_string(body, message, &config.get_server_name());
+    let url = format!("{server}/{}", url_encode(topic));
+
+    let mut request = client.post(&url).body(body).header("Title", title);
+
+    if let Some(priority) = push.config.get("priority").and_then(|v| v.as_str())
+        && !priority.is_empty()
+    {
+        request = request.header("Priority", priority);
+    }
+    if let Some(tags) = push.config.get("tags").and_then(|v| v.as_str())
+        && !tags.is_empty()
+    {
+        request = request.header("Tags", tags);
+    }
+
+    if let Some(token) = push.config.get("token").and_then(|v| v.as_str())
+        && !token.is_empty()
+    {
+        request = request.header("Authorization", format!("Bearer {token}"));
+    } else if let Some(username) = push.config.get("username").and_then(|v| v.as_str())
+        && !username.is_empty()
+    {
+        let password = push
+            .config
+            .get("password")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        request = request.basic_auth(username, Some(password));
+    }
+
+    let response = request.send().await?;
+    let status = response.status();
+    let response_text = response_text_limited(response).await?;
+    validate_response(push, status.as_u16(), &response_text)?;
+    info!("ntfy notification sent successfully to {}", push.name);
+
     Ok(())
 }
 
@@ -597,6 +675,46 @@ mod tests {
 
         let result = send_notification(&config("test-server"), &push, "Test Message").await;
         assert!(result.is_ok()); // Should handle unknown type gracefully
+    }
+
+    fn ntfy(url_base: String) -> PushConfig {
+        // `local_server` answers on `/`; the sender posts to `{server}/{topic}`,
+        // so the "server" here is the listener root and the topic is empty-path
+        // friendly — use a single segment the mock ignores beyond the request line.
+        let mut config = toml::Table::new();
+        config.insert("server".to_string(), TomlValue::String(url_base));
+        config.insert("topic".to_string(), TomlValue::String("alerts".to_string()));
+        config.insert("title".to_string(), TomlValue::String("{{name}}".to_string()));
+        config.insert(
+            "message".to_string(),
+            TomlValue::String("{{message}}".to_string()),
+        );
+        config.insert("priority".to_string(), TomlValue::String("high".to_string()));
+        config.insert("tags".to_string(), TomlValue::String("warning".to_string()));
+        config.insert("token".to_string(), TomlValue::String("tk_test".to_string()));
+        PushConfig {
+            name: "test_ntfy".to_string(),
+            push_type: "ntfy".to_string(),
+            config,
+        }
+    }
+
+    #[tokio::test]
+    async fn ntfy_posts_title_priority_tags_and_bearer_auth() {
+        let (url, request) = local_server(200, br#"{"id":"1"}"#.to_vec()).await;
+        let push = ntfy(url);
+        send_notification(&config("box-1"), &push, "CPU high").await.unwrap();
+        let request = String::from_utf8(request.await.unwrap()).unwrap();
+        // Hyper lowercases header names on the wire; match on that spelling.
+        assert!(request.starts_with("POST /alerts HTTP/1.1"), "request was {request}");
+        assert!(request.contains("title: box-1"), "request was {request}");
+        assert!(request.contains("priority: high"), "request was {request}");
+        assert!(request.contains("tags: warning"), "request was {request}");
+        assert!(
+            request.contains("authorization: Bearer tk_test"),
+            "request was {request}"
+        );
+        assert!(request.contains("\r\n\r\nCPU high"), "request was {request}");
     }
 
     #[tokio::test]

@@ -240,6 +240,6 @@ const _pushResponse = <String, dynamic>{
     },
   ],
   'push_rate': '1/1m',
-  'push_types': ['webhook', 'serverchan', 'bark', 'ios'],
+  'push_types': ['webhook', 'serverchan', 'bark', 'ntfy', 'ios'],
   'applies_on_restart': true,
 };

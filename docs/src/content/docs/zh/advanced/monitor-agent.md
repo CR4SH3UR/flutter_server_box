@@ -190,7 +190,7 @@ agent 从二进制文件所在目录读取 `config.toml`。所有可用配置项
 
 只有 admin 账号能查看和修改这些设置。JWT secret、`database_url` 和 `[remote_access]`（是否允许明文、文件 roots、SSH 地址和各项限额）只能通过配置文件修改。账号能做什么不属于这两处：它由账号的角色决定，由 admin 在 App 或面板中编辑，详见[账号和权限](#账号和权限)。
 
-编辑器不会返回文件中已保存的 secret，例如 ServerChan key、Bark key、iOS push token 或 `Authorization` header。界面会显示“已设置”，但输入框保持为空。留空表示保留原值；输入新值则会替换。
+编辑器不会返回文件中已保存的 secret，例如 ServerChan key、Bark key、ntfy topic/token、iOS push token 或 `Authorization` header。界面会显示“已设置”，但输入框保持为空。留空表示保留原值；输入新值则会替换。
 
 通知渠道、告警规则、采集间隔、数据保留和允许来源需要重启 agent 后生效。扩展采集周期和两个闲置暂停设置会立即生效。App 会标明哪些配置需要重启。
 

@@ -404,7 +404,8 @@ export interface DataRetentionConfig {
 }
 
 /// One notification channel. `config` is the channel's own free-form settings
-/// — a webhook's url/method/headers, a bark key, an iOS token — and carries
+/// — a webhook's url/method/headers, a bark key, an ntfy topic, an iOS token —
+/// and carries
 /// keys this panel knows nothing about (`legacy_go_format`, a webhook's
 /// `expected_http_status`), so an editor must send the loaded object back with
 /// its edits applied rather than rebuild it from the fields it renders.

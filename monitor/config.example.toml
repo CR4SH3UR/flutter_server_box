@@ -204,6 +204,22 @@ body = "{{message}}"
 level = "active"
 
 [[push]]
+name = "ntfy"
+push_type = "ntfy"
+server = "https://ntfy.sh"
+# Topic is the access secret on a public server — pick something unguessable.
+topic = ""
+# Optional: access token for a locked-down server (Authorization: Bearer …).
+# token = ""
+# Or Basic auth instead of a token:
+# username = ""
+# password = ""
+title = "ServerBox Monitor"
+message = "{{message}}"
+# priority = "default"   # 1–5 or min / low / default / high / urgent
+# tags = "warning"
+
+[[push]]
 name = "ios"
 push_type = "ios"
 token = ""

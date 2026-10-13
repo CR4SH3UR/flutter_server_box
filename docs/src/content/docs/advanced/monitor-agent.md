@@ -241,7 +241,8 @@ admin edits from the App or the panel. See
 [Accounts and permissions](#accounts-and-permissions).
 
 The editor never returns stored secrets such as ServerChan or Bark keys, an
-iOS push token, or an `Authorization` header. It shows that each value is
+ntfy topic or token, an iOS push token, or an `Authorization` header. It shows
+that each value is
 *set* while leaving the field empty. Leave it empty to keep the existing
 secret, or enter a replacement.
 
