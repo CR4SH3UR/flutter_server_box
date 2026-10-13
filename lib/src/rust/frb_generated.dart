@@ -95,7 +95,11 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-        stem: 'UNKNOWN',
+        // Must match crates/sbm_ffi's cdylib name. Codegen falls back to
+        // UNKNOWN when `cargo metadata` cannot read the crate (e.g. a partial
+        // workspace checkout); Android then dlopens libUNKNOWN.so and dies at
+        // RustLib.init. Do not leave that fallback in the generated file.
+        stem: 'sbm_ffi',
         ioDirectory: 'crates/sbm_ffi/target/release/',
         webPrefix: 'pkg/',
         wasmBindgenName: 'wasm_bindgen',
