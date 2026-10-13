@@ -77,6 +77,15 @@ const _templates = <String, Map<String, dynamic>>{
     'body': '{{message}}',
     'level': 'active',
   },
+  'ntfy': {
+    'server': 'https://ntfy.sh',
+    'topic': '',
+    'token': '',
+    'title': 'ServerBox Monitor',
+    'message': '{{message}}',
+    'priority': 'default',
+    'tags': '',
+  },
   'ios': {
     'token': '',
     'title': 'ServerBox Monitor',

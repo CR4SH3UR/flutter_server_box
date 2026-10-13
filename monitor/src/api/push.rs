@@ -9,11 +9,12 @@
 //! `SettingsPayload`.
 //!
 //! **A credential is write-only.** These entries hold a ServerChan key, a Bark
-//! key, an iOS token, an `Authorization` header — things a panel login could
-//! not read before this endpoint existed, and the agent's standing position is
-//! that the panel password does not widen what it discloses (`jwt_secret` and
-//! `database_url` are absent from `/settings` for the same reason, and
-//! `full_access` can only ever be narrowed through the API). So:
+//! key, an ntfy topic or token, an iOS token, an `Authorization` header —
+//! things a panel login could not read before this endpoint existed, and the
+//! agent's standing position is that the panel password does not widen what it
+//! discloses (`jwt_secret` and `database_url` are absent from `/settings` for
+//! the same reason, and `full_access` can only ever be narrowed through the
+//! API). So:
 //!
 //! - a GET answers `null` at every credential key — `null` means "set on the
 //!   agent, not disclosed", an absent key means "not set at all";
@@ -73,7 +74,7 @@ const TEST_RATE: (usize, Duration) = (6, Duration::from_secs(60));
 /// editors offer them. `server_chan` is the Go agent's spelling of the second
 /// one: still accepted and still written back as it was found, but not offered
 /// for a new channel.
-const OFFERED_TYPES: &[&str] = &["webhook", "serverchan", "bark", "ios"];
+const OFFERED_TYPES: &[&str] = &["webhook", "serverchan", "bark", "ntfy", "ios"];
 
 /// Which sender handles `push_type`, or `None` when nothing does.
 ///
@@ -86,6 +87,7 @@ fn canonical_type(push_type: &str) -> Option<&'static str> {
         // `send_notification` routes both spellings to the same sender.
         "serverchan" | "server_chan" => Some("serverchan"),
         "bark" => Some("bark"),
+        "ntfy" => Some("ntfy"),
         "ios" => Some("ios"),
         _ => None,
     }
@@ -109,6 +111,9 @@ fn secrets(push_type: &str) -> &'static [Secret] {
         // falls back to `sckey`, so a file may hold either.
         Some("serverchan") => &[Secret::Key("sc_key"), Secret::Key("sckey")],
         Some("bark") => &[Secret::Key("key")],
+        // The topic is the access secret on a public ntfy host; `token` /
+        // `password` are for a locked-down server.
+        Some("ntfy") => &[Secret::Key("topic"), Secret::Key("token"), Secret::Key("password")],
         Some("ios") => &[Secret::Key("token")],
         _ => &[],
     }
@@ -129,7 +134,7 @@ fn secrets(push_type: &str) -> &'static [Secret] {
 fn destination_key(push_type: &str) -> Option<&'static str> {
     match canonical_type(push_type) {
         Some("webhook") => Some("url"),
-        Some("bark") => Some("server"),
+        Some("bark") | Some("ntfy") => Some("server"),
         _ => None,
     }
 }
@@ -142,6 +147,7 @@ fn required_any_of(push_type: &str) -> &'static [&'static str] {
         Some("webhook") => &["url"],
         Some("serverchan") => &["sc_key", "sckey"],
         Some("bark") => &["key"],
+        Some("ntfy") => &["topic"],
         Some("ios") => &["token"],
         _ => &[],
     }
@@ -636,6 +642,12 @@ fn check_required(entry: &PushEntry) -> Result<(), String> {
     {
         return Err(format!("'{}' has a url that is not http(s)", entry.name));
     }
+    if canonical_type(&entry.push_type) == Some("ntfy")
+        && let Some(server) = entry.config.get("server").and_then(JsonValue::as_str)
+        && !(server.starts_with("http://") || server.starts_with("https://"))
+    {
+        return Err(format!("'{}' has a server that is not http(s)", entry.name));
+    }
     Ok(())
 }
 
@@ -793,6 +805,39 @@ mod tests {
             &existing,
         )
         .expect_err("the key rides in the request path, so this would hand it over");
+        assert!(error.contains("changes its 'server'"), "{error}");
+    }
+
+    #[test]
+    fn a_get_withholds_the_ntfy_topic_and_token() {
+        let view = view(&stored(
+            "phone",
+            "ntfy",
+            "server = \"https://ntfy.sh\"\ntopic = \"secret-topic\"\ntoken = \"tk_x\"",
+        ));
+        assert_eq!(view.config["topic"], JsonValue::Null);
+        assert_eq!(view.config["token"], JsonValue::Null);
+        assert_eq!(view.config["server"], "https://ntfy.sh");
+        assert!(view.editable);
+    }
+
+    #[test]
+    fn an_ntfy_topic_cannot_be_kept_while_its_server_moves() {
+        let existing = vec![stored(
+            "phone",
+            "ntfy",
+            "topic = \"secret-topic\"\nserver = \"https://ntfy.sh\"",
+        )];
+        let error = resolve_all(
+            vec![entry(
+                "phone",
+                "ntfy",
+                serde_json::json!({ "topic": null, "server": "https://attacker.invalid" }),
+                Some(0),
+            )],
+            &existing,
+        )
+        .expect_err("the topic rides in the request path, so this would hand it over");
         assert!(error.contains("changes its 'server'"), "{error}");
     }
 

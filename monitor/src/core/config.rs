@@ -959,6 +959,18 @@ impl Default for Config {
                     },
                 },
                 PushConfig {
+                    name: "ntfy".to_string(),
+                    push_type: "ntfy".to_string(),
+                    config: {
+                        let mut table = toml::Table::new();
+                        table.insert("server".to_string(), toml::Value::String("https://ntfy.sh".to_string()));
+                        table.insert("topic".to_string(), toml::Value::String("".to_string()));
+                        table.insert("title".to_string(), toml::Value::String("ServerBox Monitor".to_string()));
+                        table.insert("message".to_string(), toml::Value::String("{{message}}".to_string()));
+                        table
+                    },
+                },
+                PushConfig {
                     name: "ios".to_string(),
                     push_type: "ios".to_string(),
                     config: {
