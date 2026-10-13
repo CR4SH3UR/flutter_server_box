@@ -299,7 +299,7 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: [meta, native, docker]
+    needs: [meta, native]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
