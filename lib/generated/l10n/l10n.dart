@@ -3406,6 +3406,18 @@ abstract class AppLocalizations {
   /// **'Add a server first, then return here to benchmark it.'**
   String get benchmarkNoServers;
 
+  /// Title when launch fails before the main UI opens.
+  ///
+  /// In en, this message translates to:
+  /// **'ServerBox could not start'**
+  String get startupFailedTitle;
+
+  /// Body when launch fails before the main UI opens.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while opening the app. The detail below can help report the problem. Close the app and try again; if it keeps failing, reinstall or clear the app\'s data.'**
+  String get startupFailedBody;
+
   /// Title shown for the schema too new dialog or section.
   ///
   /// In en, this message translates to:
@@ -3628,11 +3640,6 @@ abstract class AppLocalizations {
   /// **'Leave the password empty to keep the existing password.'**
   String get userPasswordEditTip;
 
-  /// Formatted user-facing message for func unavailable; runtime values are supplied by placeholders.
-  ///
-  /// In en, this message translates to:
-  /// **'{func} is not available over this server\'s connection.'**
-
   /// Tab label for the system users half of the users page.
   ///
   /// In en, this message translates to:
@@ -3681,6 +3688,10 @@ abstract class AppLocalizations {
   /// **'The root group cannot be deleted.'**
   String get groupRootNotDeletable;
 
+  /// Formatted user-facing message for func unavailable; runtime values are supplied by placeholders.
+  ///
+  /// In en, this message translates to:
+  /// **'{func} is not available over this server\'s connection.'**
   String funcUnavailableFmt(String func);
 
   /// No description provided for @funcNeedsAgentGrant.

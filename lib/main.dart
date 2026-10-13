@@ -10,7 +10,6 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:server_box/app.dart';
 import 'package:server_box/core/chan.dart';
 import 'package:server_box/core/diag.dart';
 import 'package:server_box/core/llm/host.dart';
@@ -39,7 +38,7 @@ import 'package:server_box/data/store/tables.dart';
 import 'package:server_box/hive/hive_registrar.g.dart';
 import 'package:server_box/hive/legacy_adapters.dart';
 import 'package:server_box/src/rust/frb_generated.dart';
-import 'package:server_box/view/page/schema_too_new.dart';
+import 'package:server_box/view/page/launch_gate.dart';
 
 Future<void> main() async {
   await _runInZone(() async {
@@ -47,15 +46,22 @@ Future<void> main() async {
     // Agent's tools run outside any widget and read the same servers the pages
     // do — see [LlmHost.init].
     final container = ProviderContainer();
+    // Binding and the crash log sink must exist before the first frame, and
+    // before anything in `_initApp` that can fail — see `_initApp`.
+    AppBinding();
+    MethodChans.watchWindowControls();
+    _setupDebug();
+
+    // Draw immediately so the platform splash is not the only thing on
+    // screen for the whole of `_initApp`. A throw or hang there used to leave
+    // that splash forever with no Flutter window at all.
+    final launch = ValueNotifier<LaunchState>(const LaunchLoading());
+    runApp(LaunchGate(container: container, state: launch));
+
     try {
       await _initApp(container);
+      launch.value = const LaunchReady();
     } on SchemaTooNewException catch (e) {
-      // The one failure with something to say. Every other way `_initApp` can
-      // throw goes to the zone handler, which logs it and leaves the launch
-      // with no window at all — right for a bug, wrong for this: the data is
-      // intact, the fix is to reinstall the newer build, and both of those
-      // were only ever written to a file on the device.
-      //
       // Caught here rather than made non-fatal further down, because nothing
       // after `_doDbMigrate` may run: the refusal is only worth anything while
       // nothing has been written. See [SchemaTooNewException].
@@ -64,29 +70,29 @@ Future<void> main() async {
       // macOS, no `WS_VISIBLE` on Windows, no `gtk_widget_show` on Linux — and
       // the only `windowManager.show()` at launch is inside `_initWindow`,
       // which is *after* the throw. Without this the rescue screen is drawn
-      // into a window nobody ever sees: still no window, still no message,
-      // which is the failure it exists to fix.
-      //
-      // Measured, by running a build with this call commented out against a
-      // v25 database: the widget tree was there, and `window_manager` had no
-      // window at all. Asking it anything is then fatal rather than false —
-      // `WindowManager.mainWindow` force-unwraps, so `isVisible()` took the
-      // process down with `EXC_BREAKPOINT` in `WindowManager.swift:60`. So this
-      // is not only about the user seeing the screen; without it the plugin is
-      // a landmine for anything that later asks about the window.
+      // into a window nobody ever sees.
       //
       // Not `_initWindow`, which reads the size and the title-bar preference
-      // out of the database this build has just refused to touch. Fixed
-      // arguments instead: this window holds one screen of text.
+      // out of the database this build has just refused to touch.
       try {
         await SystemUIs.initDesktopWindow(hideTitleBar: false);
       } catch (e, s) {
         Loggers.app.warning('Could not show the rescue window', e, s);
       }
-      runApp(SchemaTooNewApp(err: e));
-      return;
+      launch.value = LaunchSchemaTooNew(e);
+    } catch (e, s) {
+      Loggers.app.severe('Startup failed', e, s);
+      try {
+        await SystemUIs.initDesktopWindow(hideTitleBar: false);
+      } catch (showErr, showStack) {
+        Loggers.app.warning(
+          'Could not show the startup-failed window',
+          showErr,
+          showStack,
+        );
+      }
+      launch.value = LaunchFailed(e, s);
     }
-    runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
   });
 }
 
@@ -130,26 +136,10 @@ Future<void> _runInZone(Future<void> Function() body) async {
 }
 
 Future<void> _initApp(ProviderContainer container) async {
-  // The app's own, which is what lets its motion setting reach the
-  // framework's animations — see [AppBinding].
-  AppBinding();
-
-  // As early as there is a binding: until the first report arrives, a bar is
-  // laid out as if nothing covered it.
-  MethodChans.watchWindowControls();
-
-  // Before anything that can fail, so that a failure during startup is at
-  // least recorded — the errors worth catching most are the ones that stop the
-  // app from reaching a screen anyone could copy a log from.
+  // `AppBinding`, `MethodChans.watchWindowControls` and `_setupDebug` run in
+  // `main` before `runApp`, so a failure here still has a Flutter window (the
+  // launch gate) rather than the platform splash alone.
   //
-  // Bounded by what it can do without a path: lines are buffered in memory
-  // and written once `CrashLog.attach` below has one, and the marker that
-  // tells the next launch this run died is a file, so neither exists until
-  // then. That window is now two platform channels wide rather than the whole
-  // of `_initData`. What covers even that is the platform's own record of the
-  // exit, read on the following launch — see [NativeExitReport].
-  _setupDebug();
-
   // Before `RustLib.init`, and that ordering is the point. `_setupDebug`
   // buffers into memory and can do nothing else until there is a path; the
   // marker that tells the next launch this one died is a *file*, so until this
