@@ -5,6 +5,8 @@
     name: string
     members: string
     system: boolean
+    /// Digits only; empty means leave alone / let `groupadd` pick.
+    gid: string
   }
 
   export function groupFormState(group?: SystemGroup): GroupFormState {
@@ -12,14 +14,18 @@
       name: group?.name ?? '',
       members: (group?.members ?? []).join(' '),
       system: false,
+      gid: group !== undefined ? String(group.gid) : '',
     }
   }
 
   export function groupDraftOf(fields: GroupFormState): GroupDraft {
+    const trimmed = fields.gid.trim()
+    const gid = trimmed === '' ? undefined : Number(trimmed)
     return {
       name: fields.name.trim(),
       members: fields.members.split(/[\s,]+/).filter(Boolean),
       system: fields.system,
+      ...(gid !== undefined && Number.isFinite(gid) ? { gid } : {}),
     }
   }
 </script>
@@ -42,6 +48,9 @@
   const { group, fields = $bindable(), onsaved, oncancel }: Props = $props()
 
   const editing = $derived(group !== undefined)
+  const gidLocked = $derived(
+    editing && (group!.gid === 0 || group!.name === 'root'),
+  )
   let busy = $state(false)
   let error = $state('')
   let needsSudo = $state(false)
@@ -88,6 +97,15 @@
       <p class="text-sm font-mono text-fg-strong">{fields.name}</p>
     {:else}
       <Input id="group-name" bind:value={fields.name} placeholder="devs" class="font-mono" />
+    {/if}
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-sm text-muted-fg" for="group-gid">{$LL.groupGid()}</label>
+    {#if gidLocked}
+      <p class="text-sm font-mono text-fg-strong">{fields.gid}</p>
+    {:else}
+      <Input id="group-gid" bind:value={fields.gid} inputmode="numeric" class="font-mono" />
     {/if}
   </div>
 

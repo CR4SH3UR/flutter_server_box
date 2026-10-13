@@ -116,4 +116,33 @@ describe('System users page', () => {
     expect(screen.getByRole('button', { name: /edit group/i })).toBeEnabled()
     expect(screen.getByRole('button', { name: /delete group/i })).toBeEnabled()
   })
+
+  it('edits a group gid and members', async () => {
+    actSystemUser.mockResolvedValue(ok)
+    render(SystemUsers, { onback: () => {} })
+    await fireEvent.click(await screen.findByRole('button', { name: /^groups$/i }))
+    await fireEvent.click(await screen.findByRole('button', { name: /^docker/ }))
+    await fireEvent.click(screen.getByRole('button', { name: /edit group/i }))
+
+    const gid = await screen.findByLabelText(/^gid$/i)
+    expect(gid).toHaveValue('998')
+    await fireEvent.input(gid, { target: { value: '1200' } })
+    const members = screen.getByLabelText(/^members$/i)
+    await fireEvent.input(members, { target: { value: 'agent' } })
+    await fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() =>
+      expect(actSystemUser).toHaveBeenCalledWith({
+        kind: 'group',
+        action: 'edit',
+        name: 'docker',
+        group_draft: {
+          name: 'docker',
+          members: ['agent'],
+          system: false,
+          gid: 1200,
+        },
+      }),
+    )
+  })
 })

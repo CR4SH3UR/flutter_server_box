@@ -86,17 +86,23 @@ final class ServerGroupDraft {
     required this.name,
     required this.members,
     required this.system,
+    this.gid,
   });
 
   final String name;
   final List<String> members;
   final bool system;
 
+  /// The gid to set. Null leaves it alone on edit, or lets `groupadd` pick
+  /// one on create.
+  final int? gid;
+
   /// `sbm_parser::users::GroupDraft` as serde reads it.
   Map<String, Object?> toJson() => {
     'name': name,
     'members': members,
     'system': system,
+    if (gid != null) 'gid': gid,
   };
 }
 

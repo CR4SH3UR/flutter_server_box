@@ -1040,15 +1040,19 @@ extension on _UsersPageState {
     if (catalog == null) return null;
     var name = group?.name ?? '';
     var membersText = group?.members.join(',') ?? '';
+    var gidText = group == null ? '' : '${group.gid}';
     var systemGroup = group?.isSystem(catalog.uidMin) ?? false;
+    final gidLocked =
+        group != null && (group.gid == 0 || group.name == 'root');
 
     while (mounted) {
       final nameCtrl = TextEditingController(text: name);
+      final gidCtrl = TextEditingController(text: gidText);
       final membersCtrl = TextEditingController(text: membersText);
       final submitted = await context.showRoundDialog<bool>(
         title: group == null ? libL10n.add : libL10n.edit,
         child: DisposeWith(
-          notifiers: [nameCtrl, membersCtrl],
+          notifiers: [nameCtrl, gidCtrl, membersCtrl],
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: StatefulBuilder(
@@ -1061,6 +1065,14 @@ extension on _UsersPageState {
                     icon: Icons.group_outlined,
                     enabled: group == null,
                     autoFocus: group == null,
+                    suggestion: false,
+                  ),
+                  Input(
+                    controller: gidCtrl,
+                    label: l10n.groupGid,
+                    icon: Icons.tag,
+                    enabled: !gidLocked,
+                    type: TextInputType.number,
                     suggestion: false,
                   ),
                   Input(
@@ -1093,6 +1105,7 @@ extension on _UsersPageState {
         actions: Btnx.cancelOk,
       );
       name = nameCtrl.text;
+      gidText = gidCtrl.text;
       membersText = membersCtrl.text;
       if (submitted != true || !mounted) return null;
 
@@ -1103,10 +1116,22 @@ extension on _UsersPageState {
           .toSet()
           .toList()
         ..sort();
+      final gidTrimmed = gidText.trim();
+      final int? gid;
+      if (gidTrimmed.isEmpty) {
+        gid = null;
+      } else {
+        gid = int.tryParse(gidTrimmed);
+        if (gid == null) {
+          Toast.error(l10n.groupGid);
+          continue;
+        }
+      }
       final draft = ServerGroupDraft(
         name: name.trim(),
         members: members,
         system: systemGroup,
+        gid: gid,
       );
       final duplicate =
           group == null &&

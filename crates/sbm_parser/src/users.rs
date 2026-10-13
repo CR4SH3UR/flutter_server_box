@@ -292,16 +292,22 @@ pub struct UserDraft {
 /// The same fields for a new group and for a change to one; [`edit_group_command`]
 /// diffs against the group as the catalog has it. [`Self::members`] is the
 /// `/etc/group` member list only — primary-group membership is an account's
-/// own `gid`, changed through [`edit_command`].
+/// own `gid`, changed through [`edit_command`]. Renaming is refused
+/// ([`UserError::Renaming`]): every account that names the group would still
+/// hold the old name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GroupDraft {
     pub name: String,
     #[serde(default)]
     pub members: Vec<String>,
     /// A system group, with a gid below the machine's threshold. Only the
-    /// create form offers it.
+    /// create form offers it (`groupadd -r`).
     #[serde(default)]
     pub system: bool,
+    /// The gid to set. `None` means leave it alone on edit, or let `groupadd`
+    /// pick one on create. On edit a change becomes `groupmod -g`.
+    #[serde(default)]
+    pub gid: Option<u32>,
 }
 
 /// Why a draft, a name or a command was refused.
@@ -885,6 +891,10 @@ pub fn create_group_command(draft: &GroupDraft) -> Result<String, UserError> {
     if draft.system {
         args.push("-r".to_string());
     }
+    if let Some(gid) = draft.gid {
+        args.push("-g".to_string());
+        args.push(gid.to_string());
+    }
     args.push(single_quote(&draft.name));
     let create = args.join(" ");
     if draft.members.is_empty() {
@@ -896,10 +906,11 @@ pub fn create_group_command(draft: &GroupDraft) -> Result<String, UserError> {
     ))
 }
 
-/// The command that changes a group's member list.
+/// The command that changes a group's gid and/or member list.
 ///
-/// Renaming is refused: [`UserError::Renaming`]. A no-op when the members are
-/// already what the draft asks for.
+/// Renaming is refused: [`UserError::Renaming`]. Changing the root group's gid
+/// is refused: [`UserError::RootGroupNotDeletable`]. A no-op when nothing
+/// differs from the catalog.
 pub fn edit_group_command(
     original: &SystemGroup,
     draft: &GroupDraft,
@@ -910,10 +921,29 @@ pub fn edit_group_command(
     if draft.name != original.name {
         return Err(UserError::Renaming);
     }
-    if draft.members == original.members {
-        return Ok(":".to_string());
+
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(gid) = draft.gid
+        && gid != original.gid
+    {
+        if original.gid == 0 || original.name == "root" {
+            return Err(UserError::RootGroupNotDeletable);
+        }
+        parts.push(format!(
+            "groupmod -g {} {}",
+            gid,
+            single_quote(&original.name)
+        ));
     }
-    Ok(gpasswd_members(&original.name, &draft.members))
+    if draft.members != original.members {
+        parts.push(gpasswd_members(&original.name, &draft.members));
+    }
+
+    match parts.as_slice() {
+        [] => Ok(":".to_string()),
+        [one] => Ok(one.clone()),
+        many => Ok(format!("set -e\n{}", many.join("\n"))),
+    }
 }
 
 /// The command that removes a group.
