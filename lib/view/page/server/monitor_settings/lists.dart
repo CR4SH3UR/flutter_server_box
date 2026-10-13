@@ -339,14 +339,20 @@ final class _MonitorPushListPageState extends State<MonitorPushListPage> {
 
   Future<void> _editPush(int? idx) async {
     final push = widget.args.push;
+    final offered = push?.pushTypes ?? const <String>[];
+    // Match the panel: a new channel starts as the first type this agent
+    // offers, not a hardcoded webhook that may be missing from `push_types`.
     final entry = idx == null
-        ? const MonitorPushEntry(name: '', pushType: 'webhook')
+        ? MonitorPushEntry(
+            name: '',
+            pushType: offered.isNotEmpty ? offered.first : 'webhook',
+          )
         : _pushes[idx];
     final edited = await MonitorPushEditPage.route.go(
       context,
       MonitorPushEditArgs(
         entry: entry,
-        pushTypes: push?.pushTypes ?? const [],
+        pushTypes: offered,
         client: widget.args.client,
       ),
     );

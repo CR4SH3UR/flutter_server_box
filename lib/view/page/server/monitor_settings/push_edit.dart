@@ -155,7 +155,13 @@ final class _MonitorPushEditPageState extends State<MonitorPushEditPage> {
   @override
   void initState() {
     super.initState();
-    _loadConfig(widget.args.entry.config);
+    // A new channel arrives with an empty config: seed the fields from the
+    // template for its type so the editor is not a blank form until the type
+    // dropdown is touched.
+    final config = widget.args.entry.config;
+    _loadConfig(
+      config.isEmpty ? (_templates[_type] ?? const {}) : config,
+    );
   }
 
   @override
@@ -248,15 +254,25 @@ extension on _MonitorPushEditPageState {
   }
 
   Widget _buildType() {
+    // Only what this agent can deliver through — `_templates` seeds the
+    // fields of a type once it is chosen, not the offer list. Offering a
+    // template the agent does not list (ntfy on an older binary) would let
+    // the form save a `push_type` the PUT then refuses with 400.
+    //
     // A spelling the agent still accepts but no longer offers (the Go agent's
     // `server_chan`) would otherwise vanish from the list and take the
     // channel's type with it.
-    final types = {..._templates.keys, ...widget.args.pushTypes, _type}.toList();
+    final types = {
+      ...widget.args.pushTypes,
+      if (_type.isNotEmpty) _type,
+    }.toList();
     return ListTile(
       leading: const Icon(MingCute.send_plane_line),
       title: Text(l10n.pushType),
       trailing: DropdownButton<String>(
-        value: _type,
+        value: types.isEmpty
+            ? null
+            : (types.contains(_type) ? _type : types.first),
         underline: const SizedBox.shrink(),
         items: [
           for (final type in types)
