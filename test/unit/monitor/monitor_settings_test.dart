@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:server_box/data/model/server/monitor_push.dart';
 import 'package:server_box/data/model/server/monitor_settings.dart';
+import 'package:server_box/data/provider/server/monitor_http.dart';
 
 /// The app's half of two contracts whose other half is in Rust
 /// (`monitor/src/api/server.rs` and `monitor/src/api/push.rs`).
@@ -180,6 +181,18 @@ void main() {
     test('editable is the agent\'s answer and is never sent back', () {
       final list = MonitorPushList.fromJson(_pushResponse);
       expect(list.pushes.first.toJson().containsKey('editable'), isFalse);
+    });
+
+    test('a push 400 body surfaces the agent\'s sentence', () {
+      expect(
+        MonitorHttpClient.agentErrorMessage({
+          'error':
+              "'phone' has push type 'ntfy', which this agent cannot send through",
+        }),
+        "'phone' has push type 'ntfy', which this agent cannot send through",
+      );
+      expect(MonitorHttpClient.agentErrorMessage({'error': ''}), isNull);
+      expect(MonitorHttpClient.agentErrorMessage('not json'), isNull);
     });
   });
 }

@@ -1022,9 +1022,25 @@ class MonitorHttpClient {
         message: e.toString(),
       );
     }
+    // `/push` and friends answer `{"error": "…"}` with a sentence meant for
+    // the editor. Without reading it, a 400 arrives as Dio's status prose and
+    // hides why the save was refused (missing topic, unknown push_type, …).
+    if (e.response?.statusCode == 400) {
+      return MonitorHttpErr(
+        type: MonitorHttpErrType.badRequest,
+        message: agentErrorMessage(e.response?.data) ?? e.toString(),
+      );
+    }
     return MonitorHttpErr(
       type: MonitorHttpErrType.unknown,
       message: e.toString(),
     );
+  }
+
+  /// The agent's `{"error": "…"}` sentence, when the body is that shape.
+  @visibleForTesting
+  static String? agentErrorMessage(Object? body) {
+    final said = body is Map ? body['error'] : null;
+    return said is String && said.isNotEmpty ? said : null;
   }
 }
