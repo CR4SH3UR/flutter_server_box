@@ -923,17 +923,17 @@ pub fn edit_group_command(
     }
 
     let mut parts: Vec<String> = Vec::new();
-    if let Some(gid) = draft.gid {
-        if gid != original.gid {
-            if original.gid == 0 || original.name == "root" {
-                return Err(UserError::RootGroupNotDeletable);
-            }
-            parts.push(format!(
-                "groupmod -g {} {}",
-                gid,
-                single_quote(&original.name)
-            ));
+    if let Some(gid) = draft.gid
+        && gid != original.gid
+    {
+        if original.gid == 0 || original.name == "root" {
+            return Err(UserError::RootGroupNotDeletable);
         }
+        parts.push(format!(
+            "groupmod -g {} {}",
+            gid,
+            single_quote(&original.name)
+        ));
     }
     if draft.members != original.members {
         parts.push(gpasswd_members(&original.name, &draft.members));
