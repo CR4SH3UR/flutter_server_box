@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       overwrite:
-        description: 'Allow overwriting an existing monitor-v* release tag / ghcr.io tag'
+        description: "Allow overwriting an existing monitor-v* release tag / ghcr.io tag"
         required: false
         type: boolean
         default: false
@@ -111,14 +111,14 @@ jobs:
             target: aarch64-unknown-linux-musl
             platform: linux
             arch: arm64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            platform: macos
-            arch: arm64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            platform: macos
-            arch: amd64
+          #       - os: macos-latest
+          #         target: aarch64-apple-darwin
+          #        platform: macos
+          #      arch: arm64
+          #          - os: macos-latest
+          #           target: x86_64-apple-darwin
+          #           platform: macos
+          #           arch: amd64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             platform: windows
