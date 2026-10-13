@@ -1,6 +1,6 @@
 name: Monitor Release
 
-# Manual trigger only. Versioning is decoupled from the app: no git tags are read;
+# Manual  trigger only. Versioning is decoupled from the app: no git tags are read;
 # the monitor crate version (monitor/Cargo.toml) is authoritative.
 # The release tag is monitor-v<version>, independent of the app's v1.0.x.
 #
