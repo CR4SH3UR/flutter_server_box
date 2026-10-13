@@ -30,10 +30,9 @@ permissions:
 jobs:
   # Which of the jobs this diff can actually affect.
   #
-  # `Rust tests (windows-latest)` is the one that costs real time (~7-9 min,
-  # most of it a cold compile); a docs-only or Dart-only PR paid it for
-  # nothing. The native app builds are not filtered here: they run only on
-  # `workflow_dispatch`.
+  # Path filters keep a docs-only or Dart-only PR from paying for Rust. The
+  # native app builds are not filtered here: they run only on
+  # `workflow_dispatch`. This fork does not run Rust tests on Windows.
   #
   # Asks GitHub for the file list rather than diffing refs: no checkout, no
   # fetch depth to get wrong, and no merge-base to compute against a base
@@ -175,19 +174,15 @@ jobs:
         run: scripts/release/patch-jni-build-id.sh
 
   rustTests:
-    name: Rust tests (${{ matrix.os }})
+    name: Rust tests
     needs: changes
     if: needs.changes.outputs.rust == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       # File and line in a backtrace, without the full debuginfo: that is most
       # of what the linker writes, and linking the test binaries — over forty
-      # for the monitor alone — was most of this job on Windows.
+      # for the monitor alone — was most of the former Windows matrix leg.
       CARGO_PROFILE_DEV_DEBUG: line-tables-only
 
     steps:
@@ -201,9 +196,6 @@ jobs:
       # The toolchain the app's build hook is pinned to, rather than the
       # runner's `stable`: that one moves on its own, and a lint added in a new
       # release failed pull requests that changed nothing it looks at.
-      # Hosted Windows runners check out with `core.autocrlf=true`, so the CR
-      # is stripped before the `$`-anchored match; an empty result fails here
-      # instead of as a confusing `rustup` error.
       - name: Install the pinned Rust toolchain
         shell: bash
         run: |
@@ -221,19 +213,9 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Test Rust workspace
-        if: matrix.os == 'ubuntu-latest'
         run: cargo test --workspace --no-fail-fast
 
-      # Only the crates with code of their own for Windows: the native sampler,
-      # the agent (ConPTY, paths, services) and the script's PowerShell side.
-      # The rest is platform-neutral and tested above; that `sbm_ffi` builds
-      # for Windows is the manual `Windows build` job's to show.
-      - name: Test Windows-specific crates
-        if: matrix.os == 'windows-latest'
-        run: cargo test -p sbm_parser -p sbm_native -p server_box_monitor --no-fail-fast
-
       - name: Clippy
-        if: matrix.os == 'ubuntu-latest'
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   monitorFrontend:

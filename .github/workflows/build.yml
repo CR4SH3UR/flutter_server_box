@@ -587,17 +587,32 @@ jobs:
           key-suffix: -android-${{ matrix.abi }}-release
       # After the build, not before: with `key.properties` present Gradle signs
       # the release itself, and the unsigned APK above is never produced.
-      - name: Fetch secrets
-        # Through the environment, and quoted. Expanded into the script the way
-        # they were, a space or a shell metacharacter in either value is parsed
-        # as script rather than as part of the value.
+      #
+      # This fork has no private key host (upstream's BASIC_AUTH + URL_PREFIX).
+      # Signing material is repository secrets — see
+      # `scripts/release/set-android-signing-secrets.sh`.
+      - name: Load signing material
         env:
-          BASIC_AUTH: ${{ secrets.BASIC_AUTH }}
-          URL_PREFIX: ${{ secrets.URL_PREFIX }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
         run: |
           set -euo pipefail
-          curl --fail --show-error --location -u "$BASIC_AUTH" -o android/app/app.key "${URL_PREFIX}app.key"
-          curl --fail --show-error --location -u "$BASIC_AUTH" -o android/key.properties "${URL_PREFIX}key.properties"
+          if [[ -z "${ANDROID_KEYSTORE_BASE64:-}" || -z "${ANDROID_KEY_PROPERTIES:-}" ]]; then
+            echo "::error::Android release signing secrets are missing."
+            echo "Set ANDROID_KEYSTORE_BASE64 and ANDROID_KEY_PROPERTIES on this repository"
+            echo "(scripts/release/set-android-signing-secrets.sh), then re-run the tag."
+            exit 1
+          fi
+          # Through the environment, and quoted: expanded into the script the
+          # way they were, a space or shell metacharacter would be parsed as
+          # script rather than as part of the value.
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/app.key
+          # Normalize storeFile to the path this job writes, so a secret that
+          # still points at a developer machine path still signs here.
+          {
+            printf '%s\n' "$ANDROID_KEY_PROPERTIES" | sed -E '/^[[:space:]]*storeFile[[:space:]]*=/d'
+            echo 'storeFile=app.key'
+          } > android/key.properties
       # Signing adds a signing block and touches no entry, which is what lets
       # F-Droid copy the signature onto its own build to compare the two.
       # `--alignment-preserved` keeps the entries where Gradle put them; the
