@@ -14,7 +14,8 @@ import 'package:server_box/data/model/app/tab.dart';
 sealed class AppLink {
   const AppLink();
 
-  static const scheme = 'serverbox';
+  /// Fork-only scheme so this build can sit beside upstream (`serverbox://`).
+  static const scheme = 'serverbox-cr4sh3ur';
 
   static AppLink? parse(String raw) {
     // The whole of it, not only `Uri.parse`: `pathSegments` and

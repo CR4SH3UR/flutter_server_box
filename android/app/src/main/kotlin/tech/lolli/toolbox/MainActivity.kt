@@ -24,10 +24,11 @@ import tech.lolli.toolbox.widget.WidgetStore
 
 class MainActivity: FlutterFragmentActivity() {
     private lateinit var channel: MethodChannel
-    private val ACTION_UPDATE_SESSIONS = "tech.lolli.toolbox.ACTION_UPDATE_SESSIONS"
-    private val ACTION_DISCONNECT_SESSION = "tech.lolli.toolbox.ACTION_DISCONNECT_SESSION"
-    private val ACTION_STOP_ALL_CONNECTIONS = "tech.lolli.toolbox.STOP_ALL_CONNECTIONS"
-    private val INTERNAL_BROADCAST_PERMISSION = "tech.lolli.toolbox.permission.INTERNAL_BROADCAST"
+    private val ACTION_UPDATE_SESSIONS = "${BuildConfig.APPLICATION_ID}.ACTION_UPDATE_SESSIONS"
+    private val ACTION_DISCONNECT_SESSION = "${BuildConfig.APPLICATION_ID}.ACTION_DISCONNECT_SESSION"
+    private val ACTION_STOP_ALL_CONNECTIONS = "${BuildConfig.APPLICATION_ID}.STOP_ALL_CONNECTIONS"
+    private val INTERNAL_BROADCAST_PERMISSION =
+        "${BuildConfig.APPLICATION_ID}.permission.INTERNAL_BROADCAST"
     private var stopAllReceiver: BroadcastReceiver? = null
     private var disableImpeller = false
     private var ownsFlutterEngine = false
@@ -78,7 +79,7 @@ class MainActivity: FlutterFragmentActivity() {
         const val MAX_TOMBSTONE_BYTES = 8 * 1024 * 1024
 
         /** Matches `AppLink.scheme` and the VIEW filter in the manifest. */
-        const val LINK_SCHEME = "serverbox"
+        const val LINK_SCHEME = "serverbox-cr4sh3ur"
     }
 
     /**

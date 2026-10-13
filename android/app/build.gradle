@@ -136,7 +136,10 @@ android {
     }
 
     defaultConfig {
-        applicationId "tech.lolli.toolbox"
+        // Fork id so this build can sit beside the upstream Play/F-Droid app
+        // (`tech.lolli.toolbox`). Kotlin source packages stay under that name;
+        // only the install identity changes.
+        applicationId "tech.lolli.toolbox.cr4sh3ur"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
