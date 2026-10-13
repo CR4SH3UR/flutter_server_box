@@ -1,0 +1,268 @@
+#:schema https://raw.githubusercontent.com/lollipopkit/flutter_server_box/main/docs/schemas/fsbt-manifest.schema.json
+# Chroma: a dark UI that keeps every accent loud — hot pink, electric cyan,
+# lime, and coral on a deep violet ink. Not a port of another product.
+
+id = "serverbox.chroma"
+name = "Chroma"
+modes = ["dark"]
+
+# Schema 3 for editor-style components (search, text/icon buttons, sidebar…).
+[schema]
+min = 3
+max = 3
+
+[colors]
+mode = 2
+seed = 0xFFFF4D9E
+
+# Violet ink for the page, lifted purple panels, and saturated accents as
+# Material roles so buttons, nav and chips stay colorful everywhere.
+[colors.palette.dark]
+primary = 0xFFFF4D9E
+onPrimary = 0xFF1A1028
+primaryContainer = 0xFF5A2048
+onPrimaryContainer = 0xFFFFD6EC
+secondary = 0xFF2EE6FF
+onSecondary = 0xFF1A1028
+secondaryContainer = 0xFF0F4A58
+onSecondaryContainer = 0xFFC8F7FF
+tertiary = 0xFFB8FF3C
+onTertiary = 0xFF1A1028
+tertiaryContainer = 0xFF3A5214
+onTertiaryContainer = 0xFFE8FFB8
+error = 0xFFFF6B4A
+onError = 0xFF1A1028
+errorContainer = 0xFF5A2418
+onErrorContainer = 0xFFFFD8CE
+surface = 0xFF1A1028
+surfaceDim = 0xFF140C20
+surfaceBright = 0xFF3A2A52
+surfaceContainerLowest = 0xFF10081A
+surfaceContainerLow = 0xFF221634
+surfaceContainer = 0xFF2A1C40
+surfaceContainerHigh = 0xFF34264C
+surfaceContainerHighest = 0xFF3E3058
+onSurface = 0xFFF5F0FF
+# Muted lavender under 4.5:1 on this surface; lightened for legibility.
+onSurfaceVariant = 0xFFC4B8DC
+outline = 0xFFA090C0
+outlineVariant = 0xFF4A3A68
+inverseSurface = 0xFFF5F0FF
+onInverseSurface = 0xFF1A1028
+inversePrimary = 0xFFB01860
+shadow = 0xFF000000
+scrim = 0xFF000000
+surfaceTint = 0x00000000
+
+# Soft palette wash behind the UI so the dark base still feels colorful.
+[background]
+type = "gradient"
+opacity = 0.28
+blur = 0
+
+[splash]
+color = "primary"
+duration = 800
+
+[shapes]
+card = 14
+tile = 10
+button = 12
+
+[components.card]
+backgroundColor = "surfaceContainer"
+radius = 14
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 0
+surfaceTintColor = 0
+margin = [5, 4, 5, 4]
+
+[components.tile]
+selectedTileColor = "primaryContainer"
+selectedColor = "onPrimaryContainer"
+iconColor = "secondary"
+radius = 10
+
+[components.button]
+backgroundColor = "primary"
+foregroundColor = "onPrimary"
+radius = 12
+elevation = 0
+padding = [16, 9, 16, 9]
+minHeight = 36
+
+[components.button.hovered]
+backgroundColor = 0xFFFF6BB0
+
+[components.button.pressed]
+overlayColor = 0x26000000
+
+[components.button.focused]
+borderColor = "secondary"
+borderWidth = 2
+
+[components.button.disabled]
+backgroundColor = "surfaceContainerHighest"
+foregroundColor = "outline"
+
+[components.input]
+filled = true
+fillColor = "surfaceContainerLowest"
+radius = 10
+borderColor = "secondary"
+borderWidth = 1
+focusedBorderColor = "primary"
+errorBorderColor = "error"
+padding = [12, 8, 12, 8]
+
+[components.navigation]
+backgroundColor = "surfaceContainerLowest"
+indicatorColor = "primaryContainer"
+indicatorRadius = 12
+selectedIconColor = "primary"
+unselectedIconColor = "outline"
+selectedLabelColor = "secondary"
+unselectedLabelColor = "onSurfaceVariant"
+elevation = 0
+
+[components.dialog]
+backgroundColor = "surfaceContainerHigh"
+radius = 16
+borderColor = "primary"
+borderWidth = 1
+elevation = 0
+surfaceTintColor = 0
+barrierColor = 0x99000000
+
+[components.sheet]
+backgroundColor = "surfaceContainer"
+radius = 18
+elevation = 0
+surfaceTintColor = 0
+dragHandleColor = "secondary"
+
+[components.textButton]
+foregroundColor = "secondary"
+overlayColor = 0x142EE6FF
+radius = 8
+padding = [8, 4, 8, 4]
+minHeight = 28
+
+[components.textButton.disabled]
+foregroundColor = "outline"
+
+[components.outlinedButton]
+foregroundColor = "primary"
+borderColor = "primary"
+borderWidth = 1
+radius = 12
+padding = [14, 6, 14, 6]
+minHeight = 32
+
+[components.outlinedButton.hovered]
+borderColor = "secondary"
+foregroundColor = "secondary"
+
+[components.iconButton]
+foregroundColor = "secondary"
+overlayColor = 0x14FF4D9E
+radius = 8
+iconSize = 18
+
+[components.search]
+backgroundColor = "surfaceContainerLowest"
+radius = 12
+borderColor = "outlineVariant"
+borderWidth = 1
+iconColor = "tertiary"
+textColor = "onSurface"
+hintColor = "outline"
+height = 32
+
+[components.appBar]
+backgroundColor = "surface"
+foregroundColor = "onSurface"
+iconColor = "primary"
+elevation = 0
+surfaceTintColor = 0
+
+[components.segmented]
+backgroundColor = "surfaceContainerLowest"
+selectedColor = "primaryContainer"
+textColor = "onSurfaceVariant"
+selectedTextColor = "onPrimaryContainer"
+radius = 10
+
+[components.sidebar]
+selectedColor = "primaryContainer"
+textColor = "onSurfaceVariant"
+selectedTextColor = "onPrimaryContainer"
+iconColor = "outline"
+selectedIconColor = "secondary"
+radius = 8
+
+[components.menu]
+backgroundColor = "surfaceContainerLow"
+textColor = "onSurface"
+radius = 10
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 2
+surfaceTintColor = 0
+
+[components.tooltip]
+backgroundColor = "tertiaryContainer"
+textColor = "onTertiaryContainer"
+radius = 6
+borderColor = "tertiary"
+borderWidth = 1
+padding = [8, 4, 8, 4]
+
+[components.toast]
+backgroundColor = "secondaryContainer"
+textColor = "onSecondaryContainer"
+radius = 10
+borderColor = "secondary"
+borderWidth = 1
+elevation = 2
+
+[components.switch]
+thumbColor = "outline"
+trackColor = "surfaceContainerHighest"
+trackOutlineColor = "outlineVariant"
+selectedThumbColor = "onPrimary"
+selectedTrackColor = "primary"
+selectedTrackOutlineColor = 0
+
+[components.slider]
+activeTrackColor = "primary"
+inactiveTrackColor = "outlineVariant"
+thumbColor = "secondary"
+trackHeight = 4
+
+[components.progress]
+color = "secondary"
+trackColor = "outlineVariant"
+thickness = 3
+radius = 2
+
+[components.badge]
+backgroundColor = "tertiary"
+textColor = "onTertiary"
+
+[components.chip]
+backgroundColor = "secondaryContainer"
+selectedColor = "primaryContainer"
+textColor = "onSecondaryContainer"
+radius = 10
+borderWidth = 0
+
+[components.divider]
+color = "outlineVariant"
+thickness = 1
+
+[components.scrollbar]
+thumbColor = 0x80FF4D9E
+radius = 3
+thickness = 6

@@ -1,0 +1,12 @@
+id = "serverbox.chroma"
+name = "Chroma"
+homepage = "https://github.com/lollipopkit/flutter_server_box/tree/main/store/themes/serverbox.chroma"
+license = "MIT"
+
+[description]
+en = "Dark violet ink with loud accents: hot pink, electric cyan, lime and coral. Gradient wash, colorful chips and nav. Dark only."
+zh = "深紫罗兰底色，高饱和强调色：热粉、电光青、青绿与珊瑚橙。渐变底、彩色标签与导航。仅深色。"
+zh-TW = "深紫羅蘭底色，高飽和強調色：熱粉、電光青、青綠與珊瑚橙。漸變底、彩色標籤與導航。僅深色。"
+
+# Versions are appended by scripts/publish-themes.py, which packs the folder
+# beside this file and records the digest of what it built.
