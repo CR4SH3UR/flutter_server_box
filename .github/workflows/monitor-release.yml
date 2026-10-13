@@ -312,13 +312,13 @@ jobs:
           path: packages
           merge-multiple: true
 
-      - name: Checksums
-        shell: bash
-        working-directory: packages
+     # - name: Checksums
+      #  shell: bash
+    #    working-directory: packages
         # `--`, so an archive is never read as an option. The names are all
         # `server-box-monitor_…` today, which is the kind of thing that holds
         # until it doesn't; it keeps the bare filenames `sha256sum -c` expects.
-        run: sha256sum -- *.tar.gz *.zip > SHA256SUMS
+    #    run: sha256sum -- *.tar.gz *.zip > SHA256SUMS
 
       - name: Create Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
