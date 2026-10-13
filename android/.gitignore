@@ -14,3 +14,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# This fork keeps a dedicated release keystore in-tree so CI can sign without
+# GitHub Actions secrets (sideload builds only).
+!release-signing/
+!release-signing/**

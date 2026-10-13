@@ -563,6 +563,7 @@ jobs:
             "build-tools;$build_tools" \
             "ndk;$ndk_version"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
+          echo "APKSIGNER=$ANDROID_HOME/build-tools/$build_tools/apksigner" >> "$GITHUB_ENV"
       # Release-profile hook outputs (debug caches from analysis.yml do not
       # reuse). Suffix keeps arm64 and amd64 caches apart; tags may save (see
       # build-hook-cache).
@@ -584,9 +585,10 @@ jobs:
         with:
           step: save
           key-suffix: -android-${{ matrix.abi }}-release
-      # This fork publishes the unsigned F-Droid APK as-is — no keystore, no
-      # repository secrets. Upstream signs here with BASIC_AUTH + URL_PREFIX.
-      - name: Name the release APK
+      # Sign with the fork keystore checked into android/release-signing/ — no
+      # GitHub Actions secrets. Unsigned APKs are refused by Android Package
+      # Manager ("ne semble pas être valide").
+      - name: Sign
         shell: bash
         env:
           ABI: ${{ matrix.abi }}
@@ -600,9 +602,37 @@ jobs:
           esac
           unsigned="build/app/outputs/apk/release/$unsigned"
           out="build/app/outputs/flutter-apk/${APP_NAME}_v1.0.${BUILD_NUMBER}_${ABI}.apk"
-          [ -f "$unsigned" ] || { echo "::error::missing $unsigned"; exit 1; }
+          props=android/release-signing/key.properties
+          [ -f "$props" ] || { echo "::error::missing $props"; exit 1; }
+
+          prop() {
+            sed -n -E "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*(.*)$/\1/p" "$props" |
+              tail -n 1 | tr -d '\r'
+          }
+          store_file="$(prop storeFile)"
+          key_alias="$(prop keyAlias)"
+          KS_PASS="$(prop storePassword)"
+          KEY_PASS="$(prop keyPassword)"
+          echo "::add-mask::$KS_PASS"
+          echo "::add-mask::$KEY_PASS"
+          export KS_PASS KEY_PASS
+          # Paths in key.properties are relative to android/app/, like Gradle.
+          [[ "$store_file" == /* ]] || store_file="android/app/$store_file"
+
           mkdir -p "$(dirname "$out")"
-          cp -f "$unsigned" "$out"
+          "$APKSIGNER" sign \
+            --ks "$store_file" \
+            --ks-key-alias "$key_alias" \
+            --ks-pass env:KS_PASS \
+            --key-pass env:KEY_PASS \
+            --alignment-preserved \
+            --v1-signing-enabled false \
+            --v2-signing-enabled true \
+            --v3-signing-enabled false \
+            --v4-signing-enabled false \
+            --out "$out" \
+            "$unsigned"
+          "$APKSIGNER" verify "$out"
           rm -f build/app/outputs/flutter-apk/app-*-release.apk
       # `useLegacyPackaging` off means nothing is extracted from the APK, so
       # `nativeLibraryDir` does not exist and proot cannot be run from
