@@ -22,3 +22,6 @@ runs:
       with:
         channel: stable
         flutter-version: 3.47.5
+        # Pub cache keyed on pubspec.lock. Cold installs were ~30–60s of the
+        # Android release job before the first `pub get`.
+        cache: true

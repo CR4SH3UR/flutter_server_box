@@ -29,9 +29,14 @@ jobs:
   reproducibilityCheck:
     # Static build-input validation. The independent byte-for-byte Android
     # builds live in android-reproducible.yml, run by hand.
+    #
+    # Kept deliberately light: no Flutter, no submodules, no LFS. A recent run
+    # spent ~70s of its ~90s here on Flutter + recursive checkout; the lockfile
+    # and JNI checks already run inside `scripts/release/build-fdroid.sh`, so
+    # repeating them only delayed the Android matrix.
     name: Build input checks
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     outputs:
       # The selection, canonicalised once and matched exactly by every job
       # below. Wrapped in commas so `contains(..., ',linux,')` cannot match a
@@ -61,12 +66,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          lfs: true
-          submodules: recursive
+          # Only reads pubspec.yaml and build_data.dart — no history, LFS or
+          # packages/ needed before the Android jobs start.
+          fetch-depth: 1
           persist-credentials: false
-          fetch-depth: 0
-      - name: Install Flutter
-        uses: ./.github/actions/setup-flutter
       - name: Require tagged releases
         if: inputs.release == true && github.ref_type != 'tag'
         shell: bash
@@ -163,14 +166,6 @@ jobs:
           canonical=",$(echo "$selected" | tr -s '[:space:]' ',' | sed 's/^,//;s/,$//'),"
           echo "selected=$canonical" >> "$GITHUB_OUTPUT"
           echo "Running:$selected"
-      - name: Check locked dependencies
-        shell: bash
-        run: |
-          flutter pub get --enforce-lockfile
-          git diff --exit-code -- pubspec.yaml pubspec.lock
-      - name: Check JNI build-id patch
-        shell: bash
-        run: scripts/release/patch-jni-build-id.sh
       - name: Read the app name
         id: appName
         shell: bash
@@ -534,16 +529,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          lfs: true
-          submodules: recursive
+          # Shallow is enough for SOURCE_DATE_EPOCH. No LFS (repo has none).
+          # Skip third_party/ish-arm64 — iOS only; packages/ + ironrdp below.
+          fetch-depth: 1
           persist-credentials: false
-          fetch-depth: 0
+      - name: Checkout Android build submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Depth 1: recursive used to pull ish-arm64 (~20MB) for every ABI.
+          git submodule update --init --depth 1 -- packages/
+          git submodule update --init --depth 1 -- third_party/ironrdp
       - name: Install Flutter
         uses: ./.github/actions/setup-flutter
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: "zulu"
           java-version: "21"
+          cache: gradle
       - name: Fix the Android build epoch
         shell: bash
         run: echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
@@ -561,17 +564,27 @@ jobs:
             "ndk;$ndk_version"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$ndk_version" >> "$GITHUB_ENV"
           echo "APKSIGNER=$ANDROID_HOME/build-tools/$build_tools/apksigner" >> "$GITHUB_ENV"
-      - name: Fetch dependencies
-        run: flutter pub get --enforce-lockfile
+      # Release-profile hook outputs (debug caches from analysis.yml do not
+      # reuse). Suffix keeps arm64 and amd64 caches apart; tags may save (see
+      # build-hook-cache).
+      - uses: ./.github/actions/build-hook-cache
+        with:
+          step: restore
+          key-suffix: -android-${{ matrix.abi }}-release
       # The script F-Droid runs, so what it rebuilds from this commit is this
       # APK without its signature. `fl_build` ran a plain `flutter build apk`
       # instead: no dev plugins pruned, the plugin registrant left at a path
       # under `.dart_tool`, so `libapp.so` came out different from F-Droid's
       # (#1274) and tied to this runner's checkout path. The script also
-      # patches jni and builds proot for arm64.
+      # patches jni, enforces the lockfile and builds proot for arm64 — so a
+      # separate `pub get` step here was only doubling ~30s.
       - name: Build
         shell: bash
         run: scripts/release/build-fdroid.sh ${{ matrix.abi }}
+      - uses: ./.github/actions/build-hook-cache
+        with:
+          step: save
+          key-suffix: -android-${{ matrix.abi }}-release
       # After the build, not before: with `key.properties` present Gradle signs
       # the release itself, and the unsigned APK above is never produced.
       - name: Fetch secrets

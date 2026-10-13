@@ -48,8 +48,14 @@ runs:
 
     # A key that already exists is a warning, not a failure, so an exact hit
     # needs no check here.
+    #
+    # Tags save too: this fork releases from `v*` pushes, and a release hook
+    # cache (key-suffix `-…-release`) is useless if only `main` can write it.
+    # Debug builds on main keep using their own suffix and do not collide.
     - name: Save build hook outputs
-      if: inputs.step == 'save' && github.ref == 'refs/heads/main'
+      if: >-
+        inputs.step == 'save' &&
+        (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .dart_tool/hooks_runner
