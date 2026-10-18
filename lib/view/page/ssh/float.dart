@@ -12,6 +12,7 @@ import 'package:server_box/data/provider/app/terminal_shell.dart';
 import 'package:server_box/data/provider/virtual_keyboard.dart';
 import 'package:server_box/data/res/store.dart';
 import 'package:server_box/data/res/terminal.dart';
+import 'package:server_box/data/ssh/terminal_selection_clipboard.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/view/page/ssh/present_server.dart';
 import 'package:server_box/view/widget/float_shell.dart';
@@ -79,14 +80,32 @@ class _FloatTerminalState extends ConsumerState<_FloatTerminal> {
   final _controller = TerminalController();
   final _focusNode = FocusNode();
   final _termKey = GlobalKey<TerminalViewState>();
+  late final _selectionClipboard = TerminalSelectionClipboard(
+    readSelection: () => selectedTerminalText(_terminal, _controller),
+  );
 
   Terminal get _terminal => widget.session.terminal;
 
   @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onTerminalSelectionChanged);
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onTerminalSelectionChanged);
+    _selectionClipboard.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onTerminalSelectionChanged() {
+    if (!isMobile) return;
+    _selectionClipboard.selectionChanged(
+      selected: _controller.selection != null,
+    );
   }
 
   @override

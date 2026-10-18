@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:server_box/core/extension/context/locale.dart';
 import 'package:server_box/data/res/store.dart';
+import 'package:server_box/data/ssh/terminal_selection_clipboard.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/data/ssh/terminal_source.dart';
 import 'package:server_box/data/store/setting.dart';
@@ -163,6 +164,31 @@ void main() {
       .state<TerminalViewState>(find.byType(TerminalView))
       .renderTerminal
       .selectAll();
+
+  testWidgets('a settled selection is written to the clipboard', (tester) async {
+    // On a phone, selecting *is* copying — there is no right-click. The
+    // page's listener is gated on `isMobile`, which this host is not, so the
+    // helper is driven the way that listener drives it.
+    final session = await pump(tester);
+    session.terminal.write('the selected line\r\n');
+    await tester.pump(const Duration(milliseconds: 50));
+    selectAll(tester);
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final helper = TerminalSelectionClipboard(
+      readSelection: () => tester
+          .state<TerminalViewState>(find.byType(TerminalView))
+          .renderTerminal
+          .selectedText,
+      settle: Duration.zero,
+    );
+    addTearDown(helper.dispose);
+    helper.selectionChanged(selected: true);
+    await tester.pump();
+
+    expect(clipboard, hasLength(1));
+    expect(clipboard.single, contains('the selected line'));
+  });
 
   testWidgets('with text selected, a right-click copies it', (tester) async {
     final session = await pump(tester);

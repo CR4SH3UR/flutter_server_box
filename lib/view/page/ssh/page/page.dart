@@ -36,6 +36,7 @@ import 'package:server_box/data/res/terminal.dart';
 import 'package:server_box/data/ssh/persistent_shell.dart';
 import 'package:server_box/data/ssh/session_manager.dart';
 import 'package:server_box/data/ssh/terminal_a11y.dart';
+import 'package:server_box/data/ssh/terminal_selection_clipboard.dart';
 import 'package:server_box/data/ssh/terminal_session.dart';
 import 'package:server_box/data/ssh/terminal_source.dart';
 import 'package:server_box/data/ssh/terminal_status.dart';
@@ -284,6 +285,10 @@ class SSHPageState extends ConsumerState<SSHPage>
   Terminal get _terminal => _sess.terminal;
 
   late final TerminalController _terminalController = TerminalController();
+  late final _selectionClipboard = TerminalSelectionClipboard(
+    readSelection: () =>
+        selectedTerminalText(_terminal, _terminalController),
+  );
   final List<List<VirtKey>> _virtKeysList = [];
 
   /// The keys this session cannot use — see [VirtKeyX.worksOn]. Drawn
@@ -533,6 +538,8 @@ class SSHPageState extends ConsumerState<SSHPage>
     }
     _stopAiCommands();
     unawaited(_tmuxPageController.dispose());
+    _terminalController.removeListener(_onTerminalSelectionChanged);
+    _selectionClipboard.dispose();
     _terminalController.dispose();
     _virtKeyPage.dispose();
     _discontinuityTimer?.cancel();
@@ -618,6 +625,7 @@ class SSHPageState extends ConsumerState<SSHPage>
     );
     _bindVisibilityListener();
     _setupDiscontinuityTimer();
+    _terminalController.addListener(_onTerminalSelectionChanged);
 
     // Adopt whatever the provider already has, so a server that is connected
     // for status does not connect a second time just to show a terminal. This
@@ -1257,6 +1265,15 @@ class SSHPageState extends ConsumerState<SSHPage>
   void _onTerminalCopied() {
     _showClipboardSuccess();
     _terminalController.clearSelection();
+  }
+
+  /// Selecting on a phone is copying: there is no right-click, and the
+  /// toolbar's Copy sits under the finger that just made the range.
+  void _onTerminalSelectionChanged() {
+    if (!isMobile) return;
+    _selectionClipboard.selectionChanged(
+      selected: _terminalController.selection != null,
+    );
   }
 
   void _onTerminalSelectAll() {
