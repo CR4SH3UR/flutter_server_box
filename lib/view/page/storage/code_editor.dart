@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:computer/computer.dart';
@@ -145,7 +147,7 @@ extension on _FileEditorPageState {
     if (path != null) {
       final String? code;
       try {
-        code = await Computer.shared.startNoParam(() => editorReadUtf8(path));
+        code = await Computer.shared.startNoParam(() => _readUtf8(path));
       } catch (e, s) {
         Loggers.app.warning('Editor: read $path', e, s);
         _closeWith(libL10n.fail);
@@ -206,7 +208,7 @@ extension on _FileEditorPageState {
       _saved = true;
 
       final pop_ = widget.args?.closeAfterSave ?? _kCloseAfterSave;
-      if (pop_) Future.microtask(_pop);
+      if (pop_) unawaited(Future.microtask(_pop));
       return;
     }
 
@@ -215,7 +217,7 @@ extension on _FileEditorPageState {
     _saved = true;
 
     final pop_ = widget.args?.closeAfterSave ?? _kCloseAfterSave;
-    if (pop_) Future.microtask(_pop);
+    if (pop_) unawaited(Future.microtask(_pop));
   }
 
   void _pop() async {
@@ -254,5 +256,19 @@ extension on _FileEditorPageState {
       _onSave();
     }
     if (shouldSave != null) contextSafe?.pop();
+  }
+}
+
+/// The file as UTF-8 text, or null when it is not text.
+///
+/// Top-level so it can run in a worker. Bytes and an explicit decode rather
+/// than `readAsString`, so "not text" is an answer instead of the same
+/// `FileSystemException` a missing file throws.
+String? _readUtf8(String path) {
+  final bytes = File(path).readAsBytesSync();
+  try {
+    return utf8.decode(bytes);
+  } on FormatException {
+    return null;
   }
 }
