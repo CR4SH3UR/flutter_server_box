@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:xterm/core.dart';
+import 'package:xterm/ui.dart';
 
 /// Puts a terminal selection on the system clipboard once it has settled.
 ///
