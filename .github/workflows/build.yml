@@ -31,6 +31,12 @@ permissions:
 env:
   BUILD_TAG: test-build-${{ github.run_number }}-${{ github.sha }}
 
+# Build and test jobs run on `vars.{LINUX,MACOS,WINDOWS}_BUILD_RUNNER` when
+# the repository sets them (Settings → Secrets and variables → Actions →
+# Variables), for a larger or faster runner: a GitHub larger runner (an
+# organization on Team/Enterprise only), a third-party one, or a self-hosted
+# label. Unset, they are GitHub's standard runners. The legacy Linux build
+# stays on ubuntu-22.04 for its glibc, and the light jobs stay standard.
 jobs:
   reproducibilityCheck:
     # Static build-input validation. The independent byte-for-byte Android
@@ -264,7 +270,7 @@ jobs:
             xcarch: arm64
           - arch: amd64
             xcarch: x86_64
-    runs-on: macos-latest
+    runs-on: ${{ vars.MACOS_BUILD_RUNNER || 'macos-latest' }}
     timeout-minutes: 45
     # Read-only, on a release run as on any other. Nothing here writes to the
     # repository: the artifact is handed to `publishRelease`, which is the one
@@ -533,7 +539,7 @@ jobs:
     env:
       APP_NAME: ${{ needs.reproducibilityCheck.outputs.appName }}
       BUILD_NUMBER: ${{ needs.reproducibilityCheck.outputs.buildNumber }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_BUILD_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -767,7 +773,7 @@ jobs:
     env:
       APP_NAME: ${{ needs.reproducibilityCheck.outputs.appName }}
       BUILD_NUMBER: ${{ needs.reproducibilityCheck.outputs.buildNumber }}
-    runs-on: macos-latest
+    runs-on: ${{ vars.MACOS_BUILD_RUNNER || 'macos-latest' }}
     timeout-minutes: 45
     # See `buildMacOS` — publication is one job, and it is the only one that
     # needs to write.
@@ -856,7 +862,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs_on: ubuntu-latest
+          - runs_on: ${{ vars.LINUX_BUILD_RUNNER || 'ubuntu-latest' }}
             release_suffix: ""
             artifact_suffix: ""
           - runs_on: ubuntu-22.04
@@ -923,7 +929,7 @@ jobs:
     env:
       APP_NAME: ${{ needs.reproducibilityCheck.outputs.appName }}
       BUILD_NUMBER: ${{ needs.reproducibilityCheck.outputs.buildNumber }}
-    runs-on: windows-latest
+    runs-on: ${{ vars.WINDOWS_BUILD_RUNNER || 'windows-latest' }}
     timeout-minutes: 45
     # See `buildMacOS` — publication is one job, and it is the only one that
     # needs to write.
