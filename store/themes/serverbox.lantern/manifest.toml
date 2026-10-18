@@ -1,0 +1,309 @@
+#:schema https://raw.githubusercontent.com/lollipopkit/flutter_server_box/main/docs/schemas/fsbt-manifest.schema.json
+# Lantern: warm amber light over charcoal and cream paper, outline lanterns.
+# Every drawing in this package is original to ServerBox.
+
+id = "serverbox.lantern"
+name = "Lantern"
+modes = ["light", "dark"]
+
+# The repeating background (background.tile) and the schema 3 components.
+[schema]
+min = 3
+max = 3
+
+[colors]
+mode = 0
+seed = 0xFFE8A849
+
+[colors.palette.light]
+primary = 0xFF8B5410
+onPrimary = 0xFFFFFFFF
+primaryContainer = 0xFFFFDDB3
+onPrimaryContainer = 0xFF321B00
+secondary = 0xFF3D6F66
+onSecondary = 0xFFFFFFFF
+secondaryContainer = 0xFFC5E8DF
+onSecondaryContainer = 0xFF00201B
+tertiary = 0xFF9B4030
+onTertiary = 0xFFFFFFFF
+tertiaryContainer = 0xFFFFDBD0
+onTertiaryContainer = 0xFF3A0A04
+error = 0xFFBA1A1A
+onError = 0xFFFFFFFF
+errorContainer = 0xFFFFDAD6
+onErrorContainer = 0xFF410002
+surface = 0xFFFBF6EE
+surfaceDim = 0xFFE5DCCE
+surfaceBright = 0xFFFFFCF7
+surfaceContainerLowest = 0xFFFFFFFF
+surfaceContainerLow = 0xFFF6F0E6
+surfaceContainer = 0xFFF0E8DB
+surfaceContainerHigh = 0xFFEAE1D2
+surfaceContainerHighest = 0xFFE4DACA
+onSurface = 0xFF2C2418
+onSurfaceVariant = 0xFF655848
+outline = 0xFF80705C
+outlineVariant = 0xFFD4C6B0
+inverseSurface = 0xFF2C2418
+onInverseSurface = 0xFFFBF6EE
+inversePrimary = 0xFFE8A849
+shadow = 0xFF000000
+scrim = 0xFF000000
+surfaceTint = 0x00000000
+
+[colors.palette.dark]
+primary = 0xFFE8A849
+onPrimary = 0xFF2A1A00
+primaryContainer = 0xFF6B4A12
+onPrimaryContainer = 0xFFFFE0B0
+secondary = 0xFF7EB8A8
+onSecondary = 0xFF00332C
+secondaryContainer = 0xFF1F4A43
+onSecondaryContainer = 0xFFC5E8DF
+tertiary = 0xFFE08A6A
+onTertiary = 0xFF3A1408
+tertiaryContainer = 0xFF6B3324
+onTertiaryContainer = 0xFFFFDBD0
+error = 0xFFFFB4AB
+onError = 0xFF690005
+errorContainer = 0xFF93000A
+onErrorContainer = 0xFFFFDAD6
+surface = 0xFF1A1612
+surfaceDim = 0xFF14110E
+surfaceBright = 0xFF4A4036
+surfaceContainerLowest = 0xFF100E0B
+surfaceContainerLow = 0xFF221D18
+surfaceContainer = 0xFF2A241E
+surfaceContainerHigh = 0xFF342C25
+surfaceContainerHighest = 0xFF3F362D
+onSurface = 0xFFF3E6D4
+onSurfaceVariant = 0xFFD2BBA0
+outline = 0xFFA08A70
+outlineVariant = 0xFF56483C
+inverseSurface = 0xFFF3E6D4
+onInverseSurface = 0xFF3A2E22
+inversePrimary = 0xFF8B5410
+shadow = 0xFF000000
+scrim = 0xFF000000
+surfaceTint = 0x00000000
+
+[icons]
+style = "classic"
+
+# The pattern: two outline lanterns, sparks and dots on a transparent tile,
+# repeated every 150 logical pixels.
+[background]
+type = "image"
+image = "background.png"
+opacity = 0.28
+blur = 0
+tile = 150
+
+[splash]
+color = "surface"
+logo = "splash_logo.svg"
+duration = 900
+
+[shapes]
+card = 14
+tile = 8
+button = 12
+
+# Cards stay solid over the pattern, so what is on them reads first.
+[components.card]
+backgroundColor = "surfaceContainerLowest"
+radius = 14
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 0
+surfaceTintColor = 0x00000000
+margin = [6, 5, 6, 5]
+
+[components.dark.card]
+backgroundColor = "surfaceContainerLow"
+
+[components.tile]
+selectedTileColor = "primaryContainer"
+selectedColor = "onPrimaryContainer"
+iconColor = "onSurfaceVariant"
+radius = 8
+borderWidth = 0
+
+[components.button]
+backgroundColor = "primary"
+foregroundColor = "onPrimary"
+radius = 12
+elevation = 0
+padding = [20, 10, 20, 10]
+minHeight = 38
+
+[components.button.hovered]
+backgroundColor = "tertiary"
+
+[components.button.disabled]
+backgroundColor = "surfaceContainerHighest"
+foregroundColor = "outline"
+
+[components.textButton]
+foregroundColor = "primary"
+radius = 10
+padding = [10, 5, 10, 5]
+minHeight = 30
+
+[components.textButton.hovered]
+backgroundColor = "primaryContainer"
+
+[components.outlinedButton]
+foregroundColor = "primary"
+borderColor = "outlineVariant"
+borderWidth = 1.5
+radius = 12
+minHeight = 34
+
+[components.iconButton]
+foregroundColor = "onSurfaceVariant"
+radius = 10
+
+[components.iconButton.hovered]
+backgroundColor = "primaryContainer"
+foregroundColor = "primary"
+
+[components.input]
+filled = true
+fillColor = "surfaceContainerLow"
+radius = 10
+borderColor = "outlineVariant"
+borderWidth = 1
+focusedBorderColor = "primary"
+errorBorderColor = "error"
+padding = [14, 10, 14, 10]
+
+[components.search]
+backgroundColor = "surfaceContainer"
+radius = 12
+borderColor = "outlineVariant"
+borderWidth = 1
+iconColor = "primary"
+hintColor = "outline"
+height = 34
+
+[components.appBar]
+backgroundColor = 0x00000000
+titleColor = "onSurface"
+iconColor = "primary"
+elevation = 0
+surfaceTintColor = 0x00000000
+
+[components.navigation]
+backgroundColor = "surfaceContainerLow"
+indicatorColor = "primaryContainer"
+indicatorRadius = 12
+selectedIconColor = "primary"
+unselectedIconColor = "onSurfaceVariant"
+selectedLabelColor = "primary"
+unselectedLabelColor = "onSurfaceVariant"
+elevation = 0
+
+[components.segmented]
+backgroundColor = "surfaceContainer"
+selectedColor = "primaryContainer"
+textColor = "onSurfaceVariant"
+selectedTextColor = "onPrimaryContainer"
+radius = 10
+
+[components.sidebar]
+selectedColor = "primaryContainer"
+selectedTextColor = "onPrimaryContainer"
+selectedIconColor = "primary"
+iconColor = "onSurfaceVariant"
+radius = 10
+
+[components.dialog]
+backgroundColor = "surfaceContainerLowest"
+radius = 18
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 0
+surfaceTintColor = 0x00000000
+barrierColor = 0x662C2418
+
+[components.dark.dialog]
+backgroundColor = "surfaceContainer"
+barrierColor = 0x99000000
+
+[components.sheet]
+backgroundColor = "surfaceContainerLowest"
+radius = 20
+elevation = 0
+surfaceTintColor = 0x00000000
+dragHandleColor = "outlineVariant"
+
+[components.dark.sheet]
+backgroundColor = "surfaceContainer"
+
+[components.menu]
+backgroundColor = "surfaceContainerLowest"
+radius = 12
+borderColor = "outlineVariant"
+borderWidth = 1
+elevation = 2
+surfaceTintColor = 0x00000000
+
+[components.dark.menu]
+backgroundColor = "surfaceContainerHigh"
+
+[components.tooltip]
+backgroundColor = "primary"
+textColor = "onPrimary"
+radius = 8
+padding = [10, 5, 10, 5]
+
+[components.toast]
+backgroundColor = "primaryContainer"
+textColor = "onPrimaryContainer"
+radius = 12
+elevation = 2
+
+[components.switch]
+thumbColor = "outline"
+trackColor = "surfaceContainerHighest"
+trackOutlineColor = "outlineVariant"
+selectedThumbColor = "onPrimary"
+selectedTrackColor = "primary"
+selectedTrackOutlineColor = 0x00000000
+
+[components.slider]
+activeTrackColor = "primary"
+inactiveTrackColor = "primaryContainer"
+thumbColor = "primary"
+trackHeight = 6
+
+[components.progress]
+color = "primary"
+trackColor = "primaryContainer"
+thickness = 6
+radius = 3
+
+[components.badge]
+backgroundColor = "primary"
+textColor = "onPrimary"
+
+[components.chip]
+backgroundColor = "surfaceContainerLow"
+selectedColor = "primaryContainer"
+textColor = "onSurface"
+radius = 10
+borderColor = "outlineVariant"
+borderWidth = 1
+
+[components.divider]
+color = "outlineVariant"
+thickness = 1
+
+[components.scrollbar]
+thumbColor = "outlineVariant"
+radius = 6
+thickness = 6
+
+[layout]
+density = "compact"
