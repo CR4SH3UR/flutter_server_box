@@ -1,0 +1,13 @@
+id = "serverbox.lantern"
+name = "Lantern"
+homepage = "https://github.com/lollipopkit/flutter_server_box/tree/main/store/themes/serverbox.lantern"
+license = "MIT"
+
+[description]
+en = "Warm amber lantern light over charcoal and cream paper, a repeating pattern of outline lanterns, and a lantern splash."
+fr = "Lumière ambrée de lanterne sur charbon et papier crème, un motif de lanternes en contour, et un splash en forme de lanterne."
+zh = "暖琥珀色灯笼光，铺在木炭灰与奶油纸上，背景是重复的线稿灯笼，启动画面是一盏灯笼。"
+zh-TW = "暖琥珀色燈籠光，鋪在木炭灰與奶油紙上，背景是重複的線稿燈籠，啟動畫面是一盞燈籠。"
+
+# Versions are appended by scripts/publish-themes.py, which packs the folder
+# beside this file and records the digest of what it built.
