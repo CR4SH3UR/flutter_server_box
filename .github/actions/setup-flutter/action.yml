@@ -22,3 +22,7 @@ runs:
       with:
         channel: stable
         flutter-version: 3.47.5
+        # The SDK and the pub cache, so no job downloads ~1 GB of Flutter and
+        # every package again. Keyed on the version above and `pubspec.lock`,
+        # so a hit is the same bytes a cold install would fetch.
+        cache: true

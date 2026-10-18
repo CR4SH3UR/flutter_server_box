@@ -79,3 +79,11 @@ strip = false
 inherits = "release"
 lto = "fat"
 codegen-units = 1
+
+# Debug builds — `flutter run`, `flutter test` (through the build hook) and
+# `cargo build -p sbm_ffi` — spend much of their time writing and linking
+# DWARF for dependencies nobody steps into (IronRDP, rustls, sqlx…). Line
+# tables keep their backtraces readable at a fraction of the size; the
+# workspace's own crates keep full debug info.
+[profile.dev.package."*"]
+debug = "line-tables-only"
