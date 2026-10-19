@@ -38,21 +38,34 @@ enum ThemeNavIcon {
   final String iconKey;
 }
 
-/// Keys the Files window looks up on the active theme: `file.dir`,
-/// `file.link`, `file.default`, and `file.<ext>` for a name's extension.
+/// Keys the Files window looks up on the active icon pack, then the theme:
+/// `file.dir`, `file.link`, `file.default`, and `file.<ext>` for a name's
+/// extension.
 ///
-/// Not an enum of every extension a package may carry — a theme lists the
+/// Not an enum of every extension a package may carry — a package lists the
 /// ones it has, and a name whose key is missing falls back to
 /// [fallback], then to the built-in glyph.
 abstract final class ThemeFileIcon {
+  /// What every key here starts with, declared to the theme host so a package
+  /// may carry any `file.*` key.
+  static const namespace = 'file';
   static const dir = 'file.dir';
   static const link = 'file.link';
   static const fallback = 'file.default';
 
   /// Well-formed Files-window keys, including any `file.<ext>` a package
-  /// chooses to ship. The editor schema matches this rather than listing
-  /// extensions.
+  /// chooses to ship. The editor schema lists [schemaKeys]; the installer
+  /// still accepts any key that matches this.
   static final keyPattern = RegExp(r'^file\.[a-z][a-z0-9]*$');
+
+  /// Keys the editor schema names with the same path rule as tab and nav.
+  /// JSON Schema cannot bind an arbitrary property to its file name.
+  static Set<String> get schemaKeys => {
+    ..._builtIn.keys,
+    for (final ext in _alias.keys) 'file.$ext',
+    for (final to in _alias.values) 'file.$to',
+    for (final mapped in _named.values) 'file.$mapped',
+  };
 
   static const _named = {
     'dockerfile': 'dockerfile',

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'l10n.dart';
 
 // ignore_for_file: type=lint
@@ -2865,6 +2864,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get monitorNoRemoteAccess =>
       'Este agente está configurado solo para supervisar. Aquí no puedes abrir un terminal, ejecutar comandos ni explorar archivos. Para activar estas funciones, edita [remote_access] en el config.toml del agente.';
+
+  @override
+  String get monitorAgentTooOld =>
+      'Este agente Monitor es más antiguo de lo que admite esta versión de ServerBox. Actualiza el agente en el servidor.';
+
+  @override
+  String get monitorClientTooOld =>
+      'Este agente Monitor ya no admite esta versión de ServerBox. Actualiza la app.';
 
   @override
   String get alerts => 'Alertas';
@@ -6046,4 +6053,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String launchFailedLogs(String path) {
     return 'Registros: $path';
   }
+
+  @override
+  String get reconnect => 'Reconectar';
+
+  @override
+  String get reconnectEndsShell =>
+      'No hay una sesión de tmux a la que volver, así que reconectar cierra esta shell y todo lo que siga ejecutándose en ella, y borra su salida de la pantalla.';
 }

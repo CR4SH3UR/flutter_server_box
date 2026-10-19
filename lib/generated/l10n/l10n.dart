@@ -4864,6 +4864,18 @@ abstract class AppLocalizations {
   /// **'This agent is set up for monitoring only. You can\'t open a terminal, run commands, or browse files here. To enable these features, edit [remote_access] in the agent\'s config.toml.'**
   String get monitorNoRemoteAccess;
 
+  /// Shown when the Monitor agent speaks an older protocol than this app reads.
+  ///
+  /// In en, this message translates to:
+  /// **'This Monitor agent is older than this version of ServerBox supports. Update the agent on the server.'**
+  String get monitorAgentTooOld;
+
+  /// Shown when the Monitor agent no longer answers this app's protocol (HTTP 426).
+  ///
+  /// In en, this message translates to:
+  /// **'This Monitor agent no longer supports this version of ServerBox. Update the app.'**
+  String get monitorClientTooOld;
+
   /// User-facing label or message for alerts.
   ///
   /// In en, this message translates to:
@@ -10214,6 +10226,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Logs: {path}'**
   String launchFailedLogs(String path);
+
+  /// Terminal toolbar action that re-establishes the connection by hand.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get reconnect;
+
+  /// Confirmation before a manual reconnect that cannot re-attach tmux and so replaces the running shell.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no tmux session to re-attach, so reconnecting ends this shell and anything still running in it, and clears its output from the screen.'**
+  String get reconnectEndsShell;
 }
 
 class _AppLocalizationsDelegate

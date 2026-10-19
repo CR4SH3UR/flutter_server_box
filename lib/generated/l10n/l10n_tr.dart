@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'l10n.dart';
 
 // ignore_for_file: type=lint
@@ -2811,6 +2810,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get monitorNoRemoteAccess =>
       'Bu agent yalnızca izleme için yapılandırılmıştır. Buradan terminal açamaz, komut çalıştıramaz veya dosyalara göz atamazsınız. Bu özellikleri etkinleştirmek için agent\'ın config.toml dosyasındaki [remote_access] bölümünü düzenleyin.';
+
+  @override
+  String get monitorAgentTooOld =>
+      'Bu Monitor agent\'ı, ServerBox\'ın bu sürümünün desteklediğinden daha eski. Sunucudaki agent\'ı güncelleyin.';
+
+  @override
+  String get monitorClientTooOld =>
+      'Bu Monitor agent\'ı artık ServerBox\'ın bu sürümünü desteklemiyor. Uygulamayı güncelleyin.';
 
   @override
   String get alerts => 'Uyarılar';
@@ -5948,4 +5955,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String launchFailedLogs(String path) {
     return 'Günlükler: $path';
   }
+
+  @override
+  String get reconnect => 'Yeniden bağlan';
+
+  @override
+  String get reconnectEndsShell =>
+      'Yeniden bağlanacak bir tmux oturumu yok; yeniden bağlanmak bu kabuğu ve içinde hâlâ çalışan her şeyi sonlandırır ve ekrandaki çıktısını temizler.';
 }

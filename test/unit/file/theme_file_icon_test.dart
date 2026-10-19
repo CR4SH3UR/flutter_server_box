@@ -16,12 +16,20 @@ void main() {
     expect(ThemeFileIcon.forName('archive.7z'), isNull);
     expect(ThemeFileIcon.keyPattern.hasMatch('file.py'), isTrue);
     expect(ThemeFileIcon.keyPattern.hasMatch('file.7z'), isFalse);
+    expect(
+      ThemeFileIcon.schemaKeys,
+      containsAll(['file.dir', 'file.py', 'file.scss', 'file.makefile']),
+    );
   });
 
   test('aliases related extensions onto a glyph the package may share', () {
     expect(ThemeFileIcon.aliasOf('file.scss'), 'file.css');
     expect(ThemeFileIcon.aliasOf('file.bash'), 'file.sh');
     expect(ThemeFileIcon.aliasOf('file.py'), isNull);
+    for (final key in ThemeFileIcon.schemaKeys) {
+      final to = ThemeFileIcon.aliasOf(key);
+      if (to != null) expect(ThemeFileIcon.schemaKeys, contains(to));
+    }
   });
 
   test('built-in glyphs differ by extension', () {
