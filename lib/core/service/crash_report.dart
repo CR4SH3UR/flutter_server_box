@@ -70,6 +70,7 @@ abstract final class CrashReport {
     // says where the failure came from.
     if (error is SftpUnavailable) return isAppFault(error.cause);
     if (error is AsyncError) return isAppFault(error.error);
+    if (isInvalidSvg(error)) return false;
 
     // The whole `dart:io` family: a socket that would not open, a TLS
     // handshake that failed, a process that would not start, a file the OS
@@ -84,16 +85,19 @@ abstract final class CrashReport {
     if (error is SSHError || error is SftpError) return false;
     if (error is DioException) return false;
 
-    // A logo, mark or theme icon whose SVG this renderer cannot parse.
-    // flutter_svg answers every such file — a 404 HTML page, a DTD, an
-    // Inkscape namespace it reads as a length — with this one StateError.
-    // The picture already has a fallback; asking someone to report it is
-    // the same noise as asking them to report the network.
-    if (error is StateError && error.message == 'Invalid SVG data') {
-      return false;
-    }
-
     return true;
+  }
+
+  /// flutter_svg's one answer when `encodeSvg` in `compute` cannot build a
+  /// tree — a 404 HTML page, a DTD, Inkscape chrome it reads as a length.
+  ///
+  /// The picture already has a fallback. The exception still reaches the
+  /// zone because flutter_svg's cache attaches a `.then` with no `onError`,
+  /// so the isolate stack (`SvgParser._parseTree` → `_RemoteRunner._run`)
+  /// is reported as unhandled even when `errorBuilder` ran.
+  static bool isInvalidSvg(Object error) {
+    if (error is AsyncError) return isInvalidSvg(error.error);
+    return error is StateError && error.message == 'Invalid SVG data';
   }
 
   /// Builds the report from the previous run's log.

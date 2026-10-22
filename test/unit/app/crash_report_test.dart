@@ -304,8 +304,17 @@ void main() {
     test('a picture this renderer will not parse does not', () {
       // flutter_svg's one answer for a DTD, a 404 HTML page, or Inkscape
       // chrome it reads as a length. The mark already has a fallback.
+      // The isolate reports the same StateError wrapped in AsyncError.
+      const svg = 'Invalid SVG data';
+      expect(CrashReport.isInvalidSvg(StateError(svg)), isTrue);
       expect(
-        CrashReport.isAppFault(StateError('Invalid SVG data')),
+        CrashReport.isInvalidSvg(AsyncError(StateError(svg), StackTrace.empty)),
+        isTrue,
+      );
+      expect(CrashReport.isInvalidSvg(StateError('bad state')), isFalse);
+      expect(CrashReport.isAppFault(StateError(svg)), isFalse);
+      expect(
+        CrashReport.isAppFault(AsyncError(StateError(svg), StackTrace.empty)),
         isFalse,
       );
     });
