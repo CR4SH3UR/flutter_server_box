@@ -55,9 +55,9 @@ Debian asks that the image link to https://www.debian.org/ where it is used on
 a web page; this is an application, not a page, and the mark is not a link.
 
 Changed: the file as published is an Adobe Illustrator export whose DTD entity
-declarations and Adobe namespace attributes stop it being parsed here. Those
-were expanded and removed. The drawing is untouched — every path is
-byte-identical to the published file.''';
+declarations, Adobe namespace attributes and metadata block stop it being
+parsed here. Those were expanded and removed. The drawing is untouched —
+every path is byte-identical to the published file.''';
 
 const _gentoo = '''
 The Gentoo "g" signet — (c) Gentoo Foundation and Lennart Andre Rolland.
@@ -65,7 +65,10 @@ https://www.gentoo.org/inside-gentoo/artwork/gentoo-logo.html
 
 Licensed under the Creative Commons Attribution-ShareAlike 2.5 License
 (https://creativecommons.org/licenses/by-sa/2.5/), which is the licence Gentoo
-states for the vector versions of its logo.''';
+states for the vector versions of its logo.
+
+Changed: the SVG 1.1 DTD declaration was dropped, because flutter_svg will
+not expand it. The drawing is untouched.''';
 
 const _nixos = '''
 The NixOS logo — by the NixOS Project and contributors (Simon Frankau, Tim
@@ -74,7 +77,10 @@ https://github.com/NixOS/nixos-artwork
 
 Licensed under the Creative Commons Attribution 4.0 International License
 (https://creativecommons.org/licenses/by/4.0/). The authors' consent to that
-licence is recorded in NixOS/branding under docs/provenance/.''';
+licence is recorded in NixOS/branding under docs/provenance/.
+
+Changed: Inkscape's editor chrome and metadata were removed so the file
+parses here. The path strings, gradients and transforms are unchanged.''';
 
 const _alpine = '''
 The Alpine Linux mark — Alpine Linux.
@@ -84,4 +90,7 @@ No copyright licence, because none is needed: the mark consists only of simple
 geometric shapes, which do not meet the threshold of originality for copyright
 protection. It is filed as such on Wikimedia Commons
 (https://commons.wikimedia.org/wiki/File:Alpine_Linux.svg). It remains a
-trademark of the Alpine Linux Development Team.''';
+trademark of the Alpine Linux Development Team.
+
+Changed: Inkscape's editor chrome and metadata were removed so the file
+parses here. The two path strings are unchanged.''';

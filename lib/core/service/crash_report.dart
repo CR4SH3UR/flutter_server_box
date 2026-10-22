@@ -84,6 +84,15 @@ abstract final class CrashReport {
     if (error is SSHError || error is SftpError) return false;
     if (error is DioException) return false;
 
+    // A logo, mark or theme icon whose SVG this renderer cannot parse.
+    // flutter_svg answers every such file — a 404 HTML page, a DTD, an
+    // Inkscape namespace it reads as a length — with this one StateError.
+    // The picture already has a fallback; asking someone to report it is
+    // the same noise as asking them to report the network.
+    if (error is StateError && error.message == 'Invalid SVG data') {
+      return false;
+    }
+
     return true;
   }
 

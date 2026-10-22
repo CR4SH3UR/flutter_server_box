@@ -301,6 +301,15 @@ void main() {
       );
     });
 
+    test('a picture this renderer will not parse does not', () {
+      // flutter_svg's one answer for a DTD, a 404 HTML page, or Inkscape
+      // chrome it reads as a length. The mark already has a fallback.
+      expect(
+        CrashReport.isAppFault(StateError('Invalid SVG data')),
+        isFalse,
+      );
+    });
+
     test('anything else does, since it is this build that went wrong', () {
       expect(CrashReport.isAppFault(StateError('bad state')), isTrue);
       expect(CrashReport.isAppFault(ArgumentError('null')), isTrue);

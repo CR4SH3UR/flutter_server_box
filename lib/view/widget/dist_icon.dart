@@ -213,6 +213,10 @@ class DistIconOf extends StatelessWidget {
         fit: BoxFit.contain,
         colorFilter: _tint(context),
         semanticsLabel: dist?.name,
+        // A shipped file that this renderer will not parse must not become
+        // a zone error: the penguin is what the row already draws when it
+        // has no mark, and that is the truth of an unreadable one too.
+        errorBuilder: (_, _, _) => _fallback(context),
       );
     }
 

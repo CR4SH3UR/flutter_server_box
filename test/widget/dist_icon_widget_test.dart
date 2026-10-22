@@ -90,6 +90,26 @@ void main() {
 
     expect(find.byType(SvgPicture), findsOneWidget);
     expect(fallback(), findsNothing, reason: 'the mark, not a stand-in for it');
+    // Without this the parser's StateError reaches the zone as
+    // `Bad state: Invalid SVG data` and looks like a crash.
+    expect(
+      tester.widget<SvgPicture>(find.byType(SvgPicture)).errorBuilder,
+      isNotNull,
+    );
+  });
+
+  testWidgets('every shipped mark falls back if the file will not parse', (
+    tester,
+  ) async {
+    for (final dist in Dist.values.where((d) => d.markAsset != null)) {
+      await pump(tester, dist);
+      await tester.pump();
+      expect(
+        tester.widget<SvgPicture>(find.byType(SvgPicture)).errorBuilder,
+        isNotNull,
+        reason: 'Dist.${dist.name}',
+      );
+    }
   });
 
   testWidgets('and it is drawn in one colour', (tester) async {
