@@ -100,6 +100,13 @@ void _onUncaught(Object e, StackTrace s) {
   // not. Most uncaught errors in this app are async, so without this the
   // sink hears about almost none of them.
   //
+  // A failed SVG is not one of those. flutter_svg compiles in `compute`,
+  // and its cache listens with `.then` and no `onError`, so
+  // `StateError('Invalid SVG data')` arrives here with the isolate stack
+  // (`SvgParser._parseTree` → `_RemoteRunner._run`) even when the picture
+  // already drew its fallback. Logging it as "Zone error" is the SEVERE
+  // line this handler exists to stop; the fallback is already on screen.
+  if (CrashReport.isInvalidSvg(e)) return;
   // `LocalDiagnosticsSink.error` logs it, so logging it here as well would
   // record it twice — and with no sink installed nothing would be recorded
   // at all, which is what the fallback covers.

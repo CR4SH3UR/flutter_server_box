@@ -744,6 +744,17 @@ class _ServerDetailPageState extends ConsumerState<ServerDetailPage>
                         fit: BoxFit.contain,
                         // Named for the reader that speaks the page aloud.
                         semanticsLabel: si.spi.name,
+                        // Same outline the raster path draws on a 404: the
+                        // URL is the user's, and an HTML page or a DTD this
+                        // renderer will not expand used to reach the zone
+                        // as `Bad state: Invalid SVG data`.
+                        errorBuilder: (_, _, _) => Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: height * 0.4,
+                            color: Theme.of(context).disabledColor,
+                          ),
+                        ),
                       )
                     : ExtendedImage(
                         image: serverLogoImage(

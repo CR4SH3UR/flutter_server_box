@@ -105,17 +105,15 @@ missing.
 **Ship the file unmodified**, as far as it will go. Not tidied, not
 recoloured, not stripped of its metadata — under CC BY-SA a modified file is an
 adaptation and carries the share-alike obligation, and the metadata is where
-some of these carry their own attribution. flutter_svg logs
-`unhandled element <metadata/>` once per run for the trouble, which is the
-right trade.
+some of these carry their own attribution.
 
 **Then check it draws**, because "unmodified" is not the same as "works".
-`debian.svg` is a 2001 Adobe Illustrator export and did not: the parser strips
-namespaces before reading attribute names, so `xmlns:x="http://ns.adobe.com/…"`
-arrives as an attribute called `x` and its value goes to `double.parse`. It
-threw on load and flutter_svg drew an empty box — no exception reaching the
-app, nothing in the log, just a gap where the swirl should be. What fixed it is
-recorded with the file below.
+flutter_svg throws `Bad state: Invalid SVG data` for a DTD, for Inkscape's
+`xmlns:sodipodi` / `inkscape:cx` chrome (the parser strips the prefix, so `cx`
+is read as a length), and for Illustrator's `xmlns:x` (same, and the URL goes
+to `double.parse`). That exception used to reach the zone as a SEVERE log
+and look like a crash. What was taken out of each file is recorded below;
+every `d=` path string is unchanged.
 
 `test/unit/server/dist_asset_render_test.dart` compiles each of these the way flutter_svg
 does and fails if one yields no geometry or no paint. It is the only test here
@@ -125,10 +123,22 @@ file existed, the enum named it, the README listed it and the widget built.
 ## Changes made to the files
 
 - **debian.svg** — the DTD's entity declarations expanded in place and dropped,
-  and Illustrator's `xmlns:x`/`xmlns:i`/`xmlns:graph`/`xmlns:a` declarations and
-  the `i:`-namespaced attributes under them removed. Nothing else: the twelve
-  `d=` path strings are byte-identical to what Debian publishes, and the two
-  render the same. Debian offers the logo under LGPL-3+ *or* CC BY-SA 3.0, and
-  either permits this so long as the change is stated — which is what this line
-  is for, and why it is repeated in the in-app notice.
-- The other four are byte-identical to their sources.
+  and Illustrator's `xmlns:x`/`xmlns:i`/`xmlns:graph`/`xmlns:a` declarations,
+  the `i:`-namespaced attributes under them, and the Adobe `<metadata>` block
+  removed. Nothing else: the twelve `d=` path strings are byte-identical to
+  what Debian publishes, and the two render the same. Debian offers the logo
+  under LGPL-3+ *or* CC BY-SA 3.0, and either permits this so long as the
+  change is stated — which is what this line is for, and why it is repeated
+  in the in-app notice.
+- **alpine.svg** — Inkscape's `<sodipodi:namedview>`, `<metadata>`, and
+  `inkscape:` / `sodipodi:` / Dublin Core namespaces removed. The two path
+  strings are unchanged. No copyright subsists in the mark, so there is
+  nothing to license for the edit.
+- **gentoo.svg** — the SVG 1.1 DTD declaration dropped (flutter_svg will not
+  expand it) and unused `xmlns:xlink` removed. The four path strings and the
+  gradients are unchanged. CC BY-SA 2.5 permits this so long as the change is
+  stated.
+- **nixos.svg** — Inkscape chrome and metadata removed the same way as
+  Alpine; `xlink:href` rewritten as `href` so the xlink namespace can go.
+  The path strings, gradients and six `<use>` transforms are unchanged.
+  CC BY 4.0 permits this so long as the change is stated.
